@@ -253,7 +253,16 @@ export default function DashboardPage() {
                  renderValue: (selected) => (
                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
                      {selected.map((value) => (
-                       <Chip key={value} label={value} size="small" />
+                       <Chip 
+                         key={value} 
+                         label={value} 
+                         size="small"
+                         onDelete={(e) => {
+                           e.stopPropagation()
+                           setSelectedSectors(selectedSectors.filter(s => s !== value))
+                         }}
+                         onMouseDown={(e) => e.stopPropagation()}
+                       />
                      ))}
                    </Box>
                  ),
@@ -281,7 +290,16 @@ export default function DashboardPage() {
                  renderValue: (selected) => (
                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
                      {selected.map((value) => (
-                       <Chip key={value} label={value} size="small" />
+                       <Chip 
+                         key={value} 
+                         label={value} 
+                         size="small"
+                         onDelete={(e) => {
+                           e.stopPropagation()
+                           setSelectedStates(selectedStates.filter(s => s !== value))
+                         }}
+                         onMouseDown={(e) => e.stopPropagation()}
+                       />
                      ))}
                    </Box>
                  ),
@@ -309,7 +327,16 @@ export default function DashboardPage() {
                  renderValue: (selected) => (
                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
                      {selected.map((value) => (
-                       <Chip key={value} label={statusLabels[value]} size="small" />
+                       <Chip 
+                         key={value} 
+                         label={statusLabels[value]} 
+                         size="small"
+                         onDelete={(e) => {
+                           e.stopPropagation()
+                           setSelectedStatuses(selectedStatuses.filter(s => s !== value))
+                         }}
+                         onMouseDown={(e) => e.stopPropagation()}
+                       />
                      ))}
                    </Box>
                  ),

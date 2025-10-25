@@ -27,12 +27,11 @@ const organizations = [
   'Polaris Partners', 'Atlas Venture', 'Trinity Ventures', 'Menlo Ventures'
 ]
 
+// Tri-State Area only (NY, NJ, CT)
 const cities = {
-  'NY': ['New York', 'Brooklyn', 'White Plains', 'Yonkers', 'New Rochelle', 'Scarsdale'],
-  'CA': ['San Francisco', 'Palo Alto', 'Mountain View', 'San Jose', 'Los Angeles', 'San Diego'],
-  'MA': ['Boston', 'Cambridge', 'Brookline', 'Somerville', 'Newton'],
-  'CT': ['Stamford', 'Greenwich', 'New Haven', 'Hartford', 'Westport'],
-  'NJ': ['Jersey City', 'Hoboken', 'Princeton', 'Newark', 'Montclair']
+  'NY': ['New York', 'Brooklyn', 'White Plains', 'Yonkers', 'New Rochelle', 'Scarsdale', 'Manhattan', 'Queens', 'Westchester', 'Long Island'],
+  'NJ': ['Jersey City', 'Hoboken', 'Princeton', 'Newark', 'Montclair', 'Fort Lee', 'Morristown', 'Paramus'],
+  'CT': ['Stamford', 'Greenwich', 'New Haven', 'Hartford', 'Westport', 'Norwalk', 'Danbury', 'Bridgeport']
 }
 
 const sectors = [

@@ -204,30 +204,30 @@ export default function ProspectDetailModal({ prospect, open, onClose, onStatusU
                 </Typography>
               </Box>
             </Grid>
-          <Grid size={{ xs: 12, sm: 6 }}>
-            <Box>
-              <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-                Focus Sectors
-              </Typography>
-              <Stack direction="row" spacing={0.5} flexWrap="wrap">
-                {prospect.sectors.map((sector, idx) => (
-                  <Chip key={idx} label={sector} size="small" color="primary" variant="outlined" />
-                ))}
-              </Stack>
-            </Box>
-          </Grid>
-          <Grid size={{ xs: 12, sm: 6 }}>
-            <Box>
-              <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-                Stage Preferences
-              </Typography>
-              <Stack direction="row" spacing={0.5} flexWrap="wrap">
-                {prospect.stagePreferences.map((stage, idx) => (
-                  <Chip key={idx} label={stage} size="small" color="primary" />
-                ))}
-              </Stack>
-            </Box>
-          </Grid>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <Box>
+                <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                  Focus Sectors
+                </Typography>
+                <Stack direction="row" spacing={0.5} flexWrap="wrap">
+                  {prospect.sectors.map((sector, idx) => (
+                    <Chip key={idx} label={sector} size="small" color="primary" variant="outlined" />
+                  ))}
+                </Stack>
+              </Box>
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <Box>
+                <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                  Stage Preferences
+                </Typography>
+                <Stack direction="row" spacing={0.5} flexWrap="wrap">
+                  {prospect.stagePreferences.map((stage, idx) => (
+                    <Chip key={idx} label={stage} size="small" color="primary" />
+                  ))}
+                </Stack>
+              </Box>
+            </Grid>
           </Grid>
         </Box>
 
@@ -284,6 +284,7 @@ export default function ProspectDetailModal({ prospect, open, onClose, onStatusU
             <ListItem>
               <ListItemText
                 primary={`Current status`}
+                secondaryTypographyProps={{ component: 'div' }}
                 secondary={
                   <Chip 
                     label={statusLabels[prospect.status]} 
