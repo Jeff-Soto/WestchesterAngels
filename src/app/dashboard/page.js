@@ -173,11 +173,17 @@ export default function DashboardPage() {
     <Container maxWidth="xl" sx={{ py: 4 }}>
       {/* Header */}
       <Box mb={4}>
-        <Stack direction="row" alignItems="center" justifyContent="space-between" mb={2}>
+        <Stack 
+          direction={{ xs: 'column', sm: 'row' }} 
+          alignItems={{ xs: 'flex-start', sm: 'center' }} 
+          justifyContent="space-between" 
+          spacing={2}
+          mb={2}
+        >
           <Stack direction="row" alignItems="center" spacing={2}>
-            <DashboardIcon sx={{ fontSize: 40, color: 'primary.main' }} />
+            <DashboardIcon sx={{ fontSize: { xs: 32, sm: 40 }, color: 'primary.main' }} />
             <Box>
-              <Typography variant="h3" component="h1">
+              <Typography variant="h3" component="h1" sx={{ fontSize: { xs: '1.75rem', sm: '3rem' } }}>
                 Investor Prospects
               </Typography>
               <Typography variant="body2" color="text.secondary">
@@ -186,20 +192,40 @@ export default function DashboardPage() {
             </Box>
           </Stack>
           
-          <Stack direction="row" spacing={2}>
+          <Stack direction="row" spacing={1}>
             <Button
               variant="outlined"
               startIcon={<DownloadIcon />}
               onClick={exportToCSV}
+              sx={{ 
+                minWidth: { xs: 'auto', sm: 'auto' },
+                px: { xs: 1.5, sm: 2 },
+                '& .MuiButton-startIcon': { 
+                  marginRight: { xs: 0, sm: 1 },
+                  marginLeft: 0
+                }
+              }}
             >
-              Export CSV
+              <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>
+                Export CSV
+              </Box>
             </Button>
             <Button
               variant="outlined"
               startIcon={<RefreshIcon />}
               onClick={() => window.location.reload()}
+              sx={{ 
+                minWidth: { xs: 'auto', sm: 'auto' },
+                px: { xs: 1.5, sm: 2 },
+                '& .MuiButton-startIcon': { 
+                  marginRight: { xs: 0, sm: 1 },
+                  marginLeft: 0
+                }
+              }}
             >
-              Refresh
+              <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>
+                Refresh
+              </Box>
             </Button>
           </Stack>
         </Stack>
