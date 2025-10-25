@@ -51,7 +51,7 @@ export default function Home() {
       </Box>
 
       <Grid container spacing={4} mb={6}>
-        <Grid item xs={12} md={4}>
+        <Grid size={{ xs: 12, md: 4 }}>
           <Card sx={{ height: '100%', transition: 'transform 0.2s', '&:hover': { transform: 'translateY(-4px)' } }}>
             <CardContent sx={{ textAlign: 'center', py: 4 }}>
               <SearchIcon sx={{ fontSize: 48, color: 'primary.main', mb: 2 }} />
@@ -65,7 +65,7 @@ export default function Home() {
           </Card>
         </Grid>
 
-        <Grid item xs={12} md={4}>
+        <Grid size={{ xs: 12, md: 4 }}>
           <Card sx={{ height: '100%', transition: 'transform 0.2s', '&:hover': { transform: 'translateY(-4px)' } }}>
             <CardContent sx={{ textAlign: 'center', py: 4 }}>
               <SmartToyIcon sx={{ fontSize: 48, color: 'primary.main', mb: 2 }} />
@@ -79,7 +79,7 @@ export default function Home() {
           </Card>
         </Grid>
 
-        <Grid item xs={12} md={4}>
+        <Grid size={{ xs: 12, md: 4 }}>
           <Card sx={{ height: '100%', transition: 'transform 0.2s', '&:hover': { transform: 'translateY(-4px)' } }}>
             <CardContent sx={{ textAlign: 'center', py: 4 }}>
               <FilterListIcon sx={{ fontSize: 48, color: 'primary.main', mb: 2 }} />
@@ -106,16 +106,19 @@ export default function Home() {
             endIcon={<ArrowForwardIcon />}
             href="/dashboard"
           >
-            Go to Dashboard
+            View Live Demo
           </Button>
           <Button 
             variant="outlined" 
             size="large"
             href="/login"
           >
-            Login
+            Login (Coming Soon)
           </Button>
         </Stack>
+        <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
+          ✨ Demo POC with 75 mock investors • Full filtering & search • Interactive UI
+        </Typography>
       </Box>
 
       <Card sx={{ bgcolor: 'background.default', textAlign: 'center' }}>
