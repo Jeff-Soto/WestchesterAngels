@@ -19,7 +19,9 @@ import {
   MenuItem,
   OutlinedInput,
   Slider,
-  Paper
+  Paper,
+  Collapse,
+  IconButton
 } from '@mui/material'
 import {
   Dashboard as DashboardIcon,
@@ -28,7 +30,10 @@ import {
   Search as SearchIcon,
   FilterList as FilterListIcon,
   FileDownload as DownloadIcon,
-  Refresh as RefreshIcon
+  Refresh as RefreshIcon,
+  ExpandMore as ExpandMoreIcon,
+  ExpandLess as ExpandLessIcon,
+  BarChart as BarChartIcon
 } from '@mui/icons-material'
 import { generateMockProspects, calculateStats, getFilterOptions, statusLabels } from '@/lib/mockData'
 import ProspectTable from './components/ProspectTable'
@@ -46,6 +51,7 @@ export default function DashboardPage() {
   const [scoreRange, setScoreRange] = useState([0, 100])
   const [selectedProspect, setSelectedProspect] = useState(null)
   const [detailModalOpen, setDetailModalOpen] = useState(false)
+  const [analyticsExpanded, setAnalyticsExpanded] = useState(false)
 
   // Generate data on client mount to avoid hydration mismatch
   useEffect(() => {
@@ -199,11 +205,50 @@ export default function DashboardPage() {
         </Stack>
       </Box>
 
-      {/* Stats Cards */}
-      <StatsCards stats={stats} />
+      {/* Collapsible Analytics Section */}
+      <Paper sx={{ mb: 3, overflow: 'hidden' }}>
+        <Box 
+          sx={{ 
+            p: 2, 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'space-between',
+            cursor: 'pointer',
+            backgroundColor: analyticsExpanded ? 'primary.main' : 'background.paper',
+            color: analyticsExpanded ? 'primary.contrastText' : 'text.primary',
+            transition: 'all 0.3s ease',
+            '&:hover': {
+              backgroundColor: analyticsExpanded ? 'primary.dark' : 'action.hover',
+            }
+          }}
+          onClick={() => setAnalyticsExpanded(!analyticsExpanded)}
+        >
+          <Stack direction="row" alignItems="center" spacing={2}>
+            <BarChartIcon />
+            <Box>
+              <Typography variant="h6">
+                Analytics Overview
+              </Typography>
+              <Typography variant="caption" sx={{ opacity: 0.8 }}>
+                {analyticsExpanded ? 'Click to hide statistics and charts' : 'Click to view statistics and charts'}
+              </Typography>
+            </Box>
+          </Stack>
+          <IconButton sx={{ color: 'inherit' }}>
+            {analyticsExpanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+          </IconButton>
+        </Box>
 
-      {/* Charts */}
-      <ChartsSection stats={stats} />
+        <Collapse in={analyticsExpanded}>
+          <Box sx={{ p: 3, pt: 2 }}>
+            {/* Stats Cards */}
+            <StatsCards stats={stats} />
+            
+            {/* Charts */}
+            <ChartsSection stats={stats} />
+          </Box>
+        </Collapse>
+      </Paper>
 
       {/* Filters */}
       <Paper sx={{ p: 3, mb: 3 }}>
