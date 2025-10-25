@@ -16,7 +16,9 @@ import {
   Paper,
   List,
   ListItem,
-  ListItemText
+  ListItemText,
+  useTheme,
+  useMediaQuery
 } from '@mui/material'
 import {
   Close as CloseIcon,
@@ -33,6 +35,9 @@ import {
 import { statusLabels } from '@/lib/mockData'
 
 export default function ProspectDetailModal({ prospect, open, onClose, onStatusUpdate }) {
+  const theme = useTheme()
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'))
+  
   if (!prospect) return null
 
   const getScoreColor = (score) => {
@@ -58,6 +63,7 @@ export default function ProspectDetailModal({ prospect, open, onClose, onStatusU
       onClose={onClose}
       maxWidth="md"
       fullWidth
+      fullScreen={isMobile}
     >
       <DialogTitle>
         <Stack direction="row" alignItems="center" justifyContent="space-between">
@@ -77,25 +83,31 @@ export default function ProspectDetailModal({ prospect, open, onClose, onStatusU
 
       <DialogContent dividers>
         {/* Fit Score Section */}
-        <Paper sx={{ p: 3, mb: 3, bgcolor: 'background.default' }}>
-          <Stack direction="row" alignItems="center" spacing={2} mb={2}>
+        <Paper sx={{ p: { xs: 2, sm: 3 }, mb: 3, bgcolor: 'background.default' }}>
+          <Stack 
+            direction={{ xs: 'column', sm: 'row' }} 
+            alignItems={{ xs: 'center', sm: 'center' }} 
+            spacing={2} 
+            mb={2}
+          >
             <Box
               sx={{
-                width: 80,
-                height: 80,
+                width: { xs: 70, sm: 80 },
+                height: { xs: 70, sm: 80 },
                 borderRadius: '50%',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 bgcolor: 'primary.main',
-                color: 'white'
+                color: 'white',
+                flexShrink: 0
               }}
             >
-              <Typography variant="h3" fontWeight="bold">
+              <Typography variant="h3" fontWeight="bold" sx={{ fontSize: { xs: '2rem', sm: '3rem' } }}>
                 {prospect.fitScore}
               </Typography>
             </Box>
-            <Box flex={1}>
+            <Box flex={1} sx={{ textAlign: { xs: 'center', sm: 'left' } }}>
               <Typography variant="h6" gutterBottom>
                 Fit Score
               </Typography>
@@ -143,13 +155,21 @@ export default function ProspectDetailModal({ prospect, open, onClose, onStatusU
             <Grid size={{ xs: 12, sm: 6 }}>
               <Stack spacing={1.5}>
                 <Stack direction="row" spacing={1} alignItems="center">
-                  <EmailIcon color="primary" fontSize="small" />
-                  <Link href={`mailto:${prospect.email}`} underline="hover">
+                  <EmailIcon color="primary" fontSize="small" sx={{ flexShrink: 0 }} />
+                  <Link 
+                    href={`mailto:${prospect.email}`} 
+                    underline="hover"
+                    sx={{ 
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      wordBreak: 'break-all'
+                    }}
+                  >
                     {prospect.email}
                   </Link>
                 </Stack>
                 <Stack direction="row" spacing={1} alignItems="center">
-                  <PhoneIcon color="primary" fontSize="small" />
+                  <PhoneIcon color="primary" fontSize="small" sx={{ flexShrink: 0 }} />
                   <Typography variant="body2">{prospect.phone}</Typography>
                 </Stack>
               </Stack>
@@ -157,13 +177,13 @@ export default function ProspectDetailModal({ prospect, open, onClose, onStatusU
             <Grid size={{ xs: 12, sm: 6 }}>
               <Stack spacing={1.5}>
                 <Stack direction="row" spacing={1} alignItems="center">
-                  <LinkedInIcon color="primary" fontSize="small" />
+                  <LinkedInIcon color="primary" fontSize="small" sx={{ flexShrink: 0 }} />
                   <Link href={`https://${prospect.linkedin}`} target="_blank" underline="hover">
                     LinkedIn Profile
                   </Link>
                 </Stack>
                 <Stack direction="row" spacing={1} alignItems="center">
-                  <LanguageIcon color="primary" fontSize="small" />
+                  <LanguageIcon color="primary" fontSize="small" sx={{ flexShrink: 0 }} />
                   <Link href={prospect.website} target="_blank" underline="hover">
                     Company Website
                   </Link>
@@ -209,7 +229,7 @@ export default function ProspectDetailModal({ prospect, open, onClose, onStatusU
                 <Typography variant="subtitle2" color="text.secondary" gutterBottom>
                   Focus Sectors
                 </Typography>
-                <Stack direction="row" spacing={0.5} flexWrap="wrap">
+                <Stack direction="row" spacing={0.5} flexWrap="wrap" sx={{ gap: 0.5 }}>
                   {prospect.sectors.map((sector, idx) => (
                     <Chip key={idx} label={sector} size="small" color="primary" variant="outlined" />
                   ))}
@@ -221,7 +241,7 @@ export default function ProspectDetailModal({ prospect, open, onClose, onStatusU
                 <Typography variant="subtitle2" color="text.secondary" gutterBottom>
                   Stage Preferences
                 </Typography>
-                <Stack direction="row" spacing={0.5} flexWrap="wrap">
+                <Stack direction="row" spacing={0.5} flexWrap="wrap" sx={{ gap: 0.5 }}>
                   {prospect.stagePreferences.map((stage, idx) => (
                     <Chip key={idx} label={stage} size="small" color="primary" />
                   ))}
@@ -239,7 +259,7 @@ export default function ProspectDetailModal({ prospect, open, onClose, onStatusU
             Portfolio Companies
           </Typography>
           <Paper variant="outlined" sx={{ p: 2, mb: 3 }}>
-            <Stack direction="row" spacing={1} flexWrap="wrap">
+            <Stack direction="row" spacing={1} flexWrap="wrap" sx={{ gap: 1 }}>
               {prospect.portfolio.map((company, idx) => (
                 <Chip 
                   key={idx} 
@@ -299,8 +319,11 @@ export default function ProspectDetailModal({ prospect, open, onClose, onStatusU
         </Box>
       </DialogContent>
 
-      <DialogActions sx={{ p: 2 }}>
-        <Button onClick={onClose}>
+      <DialogActions sx={{ p: 2, flexDirection: { xs: 'column-reverse', sm: 'row' }, gap: 1 }}>
+        <Button 
+          onClick={onClose}
+          fullWidth={isMobile}
+        >
           Close
         </Button>
         <Button 
@@ -309,6 +332,7 @@ export default function ProspectDetailModal({ prospect, open, onClose, onStatusU
           onClick={() => {
             window.location.href = `mailto:${prospect.email}`
           }}
+          fullWidth={isMobile}
         >
           Send Email
         </Button>
