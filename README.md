@@ -97,7 +97,7 @@ WestchesterAngels/
 
 ### Prerequisites
 
-- Node.js 20+ installed (LTS recommended)
+- Node.js 22+ installed (LTS recommended)
 - MongoDB Atlas account
 - Crunchbase API key (Enterprise tier)
 - OpenAI API key
