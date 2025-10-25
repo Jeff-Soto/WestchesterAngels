@@ -1,0 +1,51 @@
+{
+  "name": "westchester-angels-investor-engine",
+  "version": "1.0.0-alpha",
+  "description": "AI-powered investor prospecting engine for Westchester Angels",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "seed-db": "node scripts/seed-db.js",
+    "test:cron": "node scripts/test-cron.js",
+    "test": "echo \"Tests will be added in Phase 2\" && exit 0"
+  },
+  "dependencies": {
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.1",
+    "@mui/icons-material": "^7.3.4",
+    "@mui/material": "^7.3.4",
+    "@sendgrid/mail": "^8.1.4",
+    "axios": "^1.7.9",
+    "date-fns": "^4.1.0",
+    "mongodb": "^6.10.0",
+    "next": "^15.0.3",
+    "next-auth": "^4.24.10",
+    "openai": "^4.73.0",
+    "papaparse": "^5.4.1",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "eslint": "^8.57.1",
+    "eslint-config-next": "^15.0.3"
+  },
+  "engines": {
+    "node": ">=20.0.0",
+    "npm": ">=10.0.0"
+  },
+  "keywords": [
+    "investors",
+    "ai",
+    "crunchbase",
+    "prospecting",
+    "next.js"
+  ],
+  "author": "Your Company Name",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/WestchesterAngels.git"
+  }
+}
