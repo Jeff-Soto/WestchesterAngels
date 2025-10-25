@@ -59,7 +59,7 @@ The AI Investor Prospecting Engine helps **Westchester Angels** identify and pri
 
 ## 🏗️ Technology Stack
 
-- **Frontend**: Next.js 14 (App Router, JavaScript)
+- **Frontend**: Next.js 15 (App Router, JavaScript)
 - **Database**: MongoDB Atlas
 - **AI Engine**: OpenAI GPT-4
 - **Data Source**: Crunchbase API
