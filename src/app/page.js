@@ -38,7 +38,7 @@ export default function Home() {
           gutterBottom
           sx={{ mb: 4 }}
         >
-          Discover, enrich, and prioritize prospective investors using AI
+          Discover, verify, and prioritize prospective investors using multi-source data and AI
         </Typography>
 
         <Stack direction="row" spacing={2} justifyContent="center" flexWrap="wrap" gap={1}>
@@ -56,10 +56,10 @@ export default function Home() {
             <CardContent sx={{ textAlign: 'center', py: 4 }}>
               <SearchIcon sx={{ fontSize: 48, color: 'primary.main', mb: 2 }} />
               <Typography variant="h5" component="h2" gutterBottom>
-                Automated Discovery
+                Multi-Source Collection
               </Typography>
               <Typography color="text.secondary">
-                Weekly data ingestion from Crunchbase
+                Public lists, firm pages, and CSV uploads — no expensive APIs
               </Typography>
             </CardContent>
           </Card>
@@ -70,10 +70,10 @@ export default function Home() {
             <CardContent sx={{ textAlign: 'center', py: 4 }}>
               <SmartToyIcon sx={{ fontSize: 48, color: 'primary.main', mb: 2 }} />
               <Typography variant="h5" component="h2" gutterBottom>
-                AI Enrichment
+                AI Verification
               </Typography>
               <Typography color="text.secondary">
-                Intelligent scoring and insights powered by OpenAI
+                Intelligent data validation, scoring, and human-in-the-loop quality checks
               </Typography>
             </CardContent>
           </Card>
@@ -87,7 +87,7 @@ export default function Home() {
                 Smart Filtering
               </Typography>
               <Typography color="text.secondary">
-                Real-time filtering by sector, geography, and fit score
+                Real-time filtering by sector, geography, verification status, and fit score
               </Typography>
             </CardContent>
           </Card>
@@ -117,7 +117,7 @@ export default function Home() {
           </Button>
         </Stack>
         <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
-          ✨ Demo POC with 75 mock investors • Full filtering & search • Interactive UI
+          ✨ Demo POC with 30 real NYC/tri-state investors • Full filtering & search • Interactive UI
         </Typography>
       </Box>
 

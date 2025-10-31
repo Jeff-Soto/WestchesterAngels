@@ -9,30 +9,45 @@
 
 ## 🎯 Project Overview
 
-The AI Investor Prospecting Engine helps **Westchester Angels** identify and prioritize the most relevant investors for their portfolio companies. The system automatically:
+The AI Investor Prospecting Engine helps **Westchester Angels** discover, verify, and prioritize relevant investors using a multi-source approach with AI-powered verification. The system:
 
-- 🔍 **Imports** investor profiles from OpenVC (fund, contact, stage, sector, check size)
-- 🔗 **Enriches** missing contact info using People Data Labs or Apollo (optional)
-- 🤖 **Analyzes** each investor using AI to determine fit with Westchester Angels
-- 📊 **Scores** each prospect (0-100) based on sector, stage, geography, and check size
+- 🔍 **Collects** from multiple FREE sources (public lists, firm pages, client CSVs)
+- 🤖 **Verifies** data accuracy using AI ("same person?" matching across sources)
+- ✅ **Human-validates** uncertain records via "Data Inbox" for quality assurance
+- 🎯 **Ranks** sources by authority (firm page > personal site > directory)
+- 📊 **Scores** each prospect (0-100) based on sector, stage, geography, and affiliation
 - 💬 **Generates** personalized outreach message suggestions
 - 📧 **Facilitates** email campaigns via Constant Contact
-- 📈 **Tracks** engagement and results
+- 📈 **Tracks** engagement and verification history
 
 ---
 
 ## ✨ Key Features
 
-### Automated Data Pipeline
+### Multi-Source Data Collection
 
-- Weekly automated data import from OpenVC
-- Optional contact enrichment via People Data Labs/Apollo
-- AI-powered fit scoring using OpenAI GPT-4
-- Intelligent deduplication and normalization
+- Public investor lists (OpenVC directories, NYC angel networks)
+- Firm team page scraping (on-demand)
+- Client CSV uploads (events, conferences, referrals)
+- Automated weekly collection + on-demand imports
+
+### AI-Powered Verification
+
+- "Same person?" matching across sources
+- Source authority ranking (firm > personal > directory)
+- Confidence scoring (0-100) for each field
+- Automatic conflict detection and flagging
+
+### Human-in-the-Loop Quality
+
+- **Data Inbox**: Review uncertain records
+- Side-by-side candidate comparison
+- Quick approve/correct interface
+- Full verification audit trail
 
 ### Smart Scoring & Insights
 
-- Multi-factor fit scoring (sector, stage, geography, check size)
+- Multi-factor fit scoring (sector, stage, geography, affiliation)
 - AI-generated rationale for each prospect
 - Suggested personalized outreach messages
 - Historical score tracking
@@ -385,6 +400,6 @@ This project is proprietary and confidential. All rights reserved.
 
 ---
 
-**Status**: 🚧 Active Development  
-**Last Updated**: October 27, 2025  
-**Version**: 1.0.0-alpha
+**Status**: 🚧 Active Development - Architecture Pivot  
+**Last Updated**: October 31, 2025  
+**Version**: 1.2.0-alpha (Major Architecture Update)

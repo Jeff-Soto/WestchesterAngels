@@ -2,18 +2,20 @@
 
 ## Project Overview
 
-The AI Investor Prospecting Engine is an intelligent system designed to discover, enrich, and prioritize prospective investors for the client. The platform combines OpenVC investor data with AI-powered enrichment and scoring to deliver actionable investor insights through a secure, embeddable dashboard.
+The AI Investor Prospecting Engine is an intelligent system designed to discover, enrich, and prioritize prospective investors for the client. The platform uses **multi-source public data collection** combined with **AI-powered verification and scoring** to deliver high-quality, verified investor insights through a secure, embeddable dashboard.
 
 ### Key Features
 
-- Automated weekly data ingestion from OpenVC
-- Optional contact enrichment via People Data Labs or Apollo
-- AI-powered investor fit scoring and summarization
-- Real-time filtering by sector, geography, and fit score
-- Secure passwordless authentication
-- Email outreach capabilities via Constant Contact
-- WordPress integration via iframe
-- Admin controls for manual lead uploads
+- **Multi-source data ingestion**: Public lists, firm team pages, client CSV uploads
+- **AI-powered verification layer**: Validates data accuracy and matches across sources
+- **Human-in-the-loop validation**: "Data Inbox" for quick review of uncertain records
+- **Source tracking & authority ranking**: Prioritizes firm pages > personal sites > directories
+- **AI enrichment & scoring**: Generates summaries, fit scores, and outreach suggestions
+- **Real-time filtering**: By sector, geography, verification status, and fit score
+- **Secure passwordless authentication**
+- **Email outreach capabilities** via Constant Contact
+- **WordPress integration** via iframe
+- **Client CSV upload**: Import from events, referrals, partner groups
 
 ---
 
@@ -37,8 +39,16 @@ The AI Investor Prospecting Engine is an intelligent system designed to discover
 ### AI & Data Services
 
 - **AI Engine**: OpenAI API (GPT-4 recommended)
-- **Primary Data Source**: OpenVC (API or CSV)
-- **Optional Enrichment**: People Data Labs, Apollo.io (for contact info only)
+  - Data verification ("same person?" matching)
+  - Field inference (stage, sector from bio/description)
+  - Fit scoring and summarization
+  - Outreach message generation
+- **Data Sources**: Multi-source public collection
+  - Public investor lists (OpenVC "list of lists", NYC directories)
+  - Firm team pages (lightweight scraping)
+  - Client CSV uploads (events, referrals, partners)
+  - Alumni/angel network directories
+- **Optional Contact Enrichment**: People Data Labs, Apollo.io (email/LinkedIn validation)
 - **Email Service**: Constant Contact (primary) or SendGrid
 
 ### DevOps
@@ -90,72 +100,95 @@ The AI Investor Prospecting Engine is an intelligent system designed to discover
 
 ## Data Flow
 
-### 1. Data Ingestion (Weekly Automated)
+### 1. Multi-Source Collection (Weekly Automated + On-Demand)
 
 ```
-Vercel Cron → OpenVC API/CSV Import → Raw Investor Profiles
-              (fund name, contact, stage, sector, check size)
+Cron Job → Public Lists + Firm Pages + Client CSVs → Raw Candidate Records
 ```
 
 ### 2. Data Processing Pipeline
 
 ```
-OpenVC Data → Normalize → Optional Contact Enrichment → AI Scoring → Store (MongoDB)
-                          (People Data Labs/Apollo)      (OpenAI)
+Raw Data → Normalize → Dedupe → AI Verification → [needs_review?] → Human Review → Verified
+                                                        ↓
+                                                     [confident?]
+                                                        ↓
+                                                 AI Enrichment → Fit Scoring → MongoDB
 ```
 
 ### 3. Dashboard Access
 
 ```
-User Login → Auth Check → Filter/Query → Display Results → Initiate Outreach
+User Login → Auth Check → View Verified Prospects OR Review Data Inbox → Initiate Outreach
 ```
 
 ### Detailed Flow Diagram
 
 ```
-┌──────────────────┐
-│  Cron Trigger    │  (Weekly, Sundays 2 AM UTC)
-└────────┬─────────┘
-         │
-         ▼
 ┌──────────────────────────────────────────────────┐
-│  1. OpenVC Data Import                           │
-│     - Pull via API or CSV download               │
-│     - Already includes: fund, contact, stage,    │
-│       sector focus, check size                   │
+│  1. Multi-Source Collection                      │
+│                                                   │
+│  A. Public Lists (automated weekly)              │
+│     - OpenVC "list of lists"                     │
+│     - NYC angel directories                      │
+│     - Alumni / network pages                     │
+│                                                   │
+│  B. Firm Team Pages (on-demand)                  │
+│     - Scrape "Team" sections                     │
+│     - Extract: name, title, bio, LinkedIn        │
+│                                                   │
+│  C. Client CSV Upload (manual)                   │
+│     - Events, referrals, partners                │
+│     - Map columns to schema                      │
 └────────┬─────────────────────────────────────────┘
          │
          ▼
 ┌──────────────────────────────────────────────────┐
-│  2. Data Normalization                           │
-│     - Standardize fields                         │
-│     - Deduplicate entries                        │
-│     - Validate email formats                     │
+│  2. Normalization & Deduplication                │
+│     - Standardize: name, firm, title, location   │
+│     - Dedupe by: (name + firm), (LinkedIn URL)   │
+│     - Store all candidate links per field        │
 └────────┬─────────────────────────────────────────┘
          │
          ▼
 ┌──────────────────────────────────────────────────┐
-│  3. Optional Contact Enrichment                  │
-│     - People Data Labs: Fill missing emails      │
-│     - Apollo: Verify contacts, add LinkedIn      │
-│     - Only if OpenVC data incomplete             │
+│  3. AI Verification Layer (OpenAI)               │
+│     - "Same person?" check across sources        │
+│     - Source authority ranking (firm > personal) │
+│     - Confidence score (0-100)                   │
+│     - If confidence < 70 → needs_review: true    │
+└────────┬─────────────────────────────────────────┘
+         │
+         ├─→ [High Confidence ≥70] ──┐
+         │                            │
+         └─→ [Low Confidence <70] ───┤
+                                      │
+         ┌────────────────────────────┘
+         │
+         ▼
+┌──────────────────────────────────────────────────┐
+│  4. Human Review (Data Inbox)                    │
+│     - Show uncertain records                     │
+│     - Present candidate links side-by-side       │
+│     - Admin confirms or corrects                 │
+│     - Mark: verified: true                       │
 └────────┬─────────────────────────────────────────┘
          │
          ▼
 ┌──────────────────────────────────────────────────┐
-│  4. AI Layer (OpenAI)                            │
-│     - Calculate fit_score (0-100)                │
-│     - Analyze sector relevance to WA portfolio   │
-│     - Generate summary/rationale                 │
-│     - Create suggested outreach messages         │
+│  5. AI Enrichment (OpenAI)                       │
+│     - Generate investor summary                  │
+│     - Infer missing fields (stage, sector)       │
+│     - Calculate fit score (0-100)                │
+│     - Create outreach angle                      │
 └────────┬─────────────────────────────────────────┘
          │
          ▼
 ┌──────────────────────────────────────────────────┐
-│  5. MongoDB Storage                              │
-│     - Insert/update prospects collection         │
-│     - Store enrichment data                      │
-│     - Log processing metadata                    │
+│  6. MongoDB Storage                              │
+│     - Store verified prospect                    │
+│     - Track sources & verification history       │
+│     - Index for fast queries                     │
 └──────────────────────────────────────────────────┘
 ```
 
@@ -165,73 +198,182 @@ User Login → Auth Check → Filter/Query → Display Results → Initiate Outr
 
 ### Collection: `prospects`
 
-Primary collection for investor records.
+Primary collection for investor records with verification tracking.
 
 ```javascript
 {
   _id: ObjectId,
   name: String,              // Investor/Partner name
   org: String,               // Organization/Firm name
+  title: String,             // Role at firm (e.g., "Partner", "Managing Director")
+
   location: {
     city: String,
     state: String,
     country: String,
     coordinates: [Number]    // [longitude, latitude]
   },
+
   sectors: [String],         // ["FinTech", "HealthTech", "SaaS"]
   stage_preferences: [String], // ["Seed", "Series A"]
   check_size: {
     min: Number,             // USD
     max: Number              // USD
   },
+
+  // Verification & Quality
+  verified: Boolean,         // Has been human-reviewed
+  verification_confidence: Number, // 0-100, AI confidence score
+  needs_review: Boolean,     // Flagged for human review
+  reviewed_by: String,       // User ID who verified
+  reviewed_at: Date,
+
+  // Contact Information (with candidates)
+  email: String,             // Primary verified email
+  email_candidates: [{       // Alternative emails found
+    value: String,
+    source: String,          // "firm_page", "linkedin", "directory"
+    confidence: Number       // 0-100
+  }],
+
+  linkedin_url: String,      // Primary verified LinkedIn
+  linkedin_candidates: [{
+    value: String,
+    source: String,
+    confidence: Number
+  }],
+
+  website: String,           // Firm or personal website
+  phone: String,
+
+  // AI Enrichment
   fit_score: Number,         // 0-100
   why_summary: String,       // AI-generated rationale
-  email: String,             // Contact email (optional)
-  linkedin_url: String,
-  website: String,
-  phone: String,
+  ai_generated_bio: String,  // Summarized from sources
+  outreach_angle: String,    // AI-suggested personalized approach
+
+  // Sources & Provenance
+  sources: [{
+    type: String,            // "public_list", "firm_page", "csv_upload", "manual"
+    url: String,             // Source URL
+    name: String,            // Source name (e.g., "OpenVC List", "Event CSV")
+    collected_at: Date,
+    authority_score: Number  // Ranking: firm=100, personal=80, directory=60
+  }],
+  primary_source: String,    // Highest authority source type
+
+  // Status & Engagement
   status: String,            // "new", "contacted", "interested", "passed", "suppressed"
   tags: [String],            // Custom tags for categorization
+  notes: String,
+
+  // Timestamps
   created_at: Date,
   updated_at: Date,
   last_enriched_at: Date,
-  source_id: ObjectId        // Reference to sources collection
+  last_contacted_at: Date
 }
 ```
 
 **Indexes:**
 
 - `org` (text)
+- `name` (text)
 - `sectors` (array)
 - `fit_score` (descending)
 - `location.state`
 - `status`
+- `verified` (boolean)
+- `needs_review` (boolean)
 - `email` (unique, sparse)
+- `linkedin_url` (unique, sparse)
+- `sources.type` (array)
+- Compound: `(verified, needs_review, fit_score desc)` for dashboard queries
 
 ---
 
 ### Collection: `sources`
 
-Tracks data sources and fetch history.
+Tracks all data sources and collection history.
 
 ```javascript
 {
   _id: ObjectId,
-  type: String,              // "openvc", "manual_csv", "people_data_labs", "apollo"
-  url: String,               // API endpoint or file path
-  query_params: Object,      // Search parameters used
-  fetched_at: Date,
-  record_count: Number,
-  status: String,            // "success", "partial", "failed"
+  type: String,              // "public_list", "firm_page", "csv_upload", "manual_entry"
+  name: String,              // Human-readable source name
+  url: String,               // Source URL or file path
+  authority_score: Number,   // 100=firm page, 80=personal site, 60=directory, 40=list
+
+  // Collection details
+  collection_method: String, // "automated", "scrape", "upload", "manual"
+  collected_at: Date,
+  collected_by: String,      // User ID for manual sources
+
+  // Results
+  records_found: Number,
+  records_imported: Number,
+  records_duplicated: Number,
+  records_failed: Number,
+
+  // Status
+  status: String,            // "success", "partial", "failed", "in_progress"
   error_log: String,
-  created_by: String         // User ID for manual uploads
+
+  // Metadata
+  query_params: Object,      // For automated collections
+  file_metadata: Object,     // For uploads (filename, size, columns)
+
+  created_at: Date,
+  updated_at: Date
 }
 ```
 
 **Indexes:**
 
 - `type`
-- `fetched_at` (descending)
+- `collected_at` (descending)
+- `status`
+
+---
+
+### Collection: `verification_history`
+
+Tracks all verification and review actions.
+
+```javascript
+{
+  _id: ObjectId,
+  prospect_id: ObjectId,
+  action: String,            // "ai_verified", "human_reviewed", "confidence_updated", "merged"
+
+  // Before/after state
+  before: Object,            // Previous field values
+  after: Object,             // Updated field values
+  changes: [String],         // Fields that changed
+
+  // Context
+  confidence_score: Number,  // AI confidence at time of action
+  reviewer_id: String,       // User who performed action
+  reviewer_notes: String,    // Optional human notes
+
+  // Sources considered
+  sources_evaluated: [{
+    type: String,
+    url: String,
+    authority_score: Number,
+    selected: Boolean        // Which source was chosen
+  }],
+
+  action_date: Date,
+  processing_time_ms: Number // How long verification took
+}
+```
+
+**Indexes:**
+
+- `prospect_id`
+- `action_date` (descending)
+- `reviewer_id`
 
 ---
 
@@ -249,7 +391,8 @@ Historical scoring data for tracking changes over time.
     stage_match: Number,
     geo_proximity: Number,
     portfolio_relevance: Number,
-    recent_activity: Number
+    recent_activity: Number,
+    affiliation_boost: Number // Angel network / alumni boost
   },
   model_version: String,     // Track scoring algorithm version
   computed_at: Date,
@@ -1228,22 +1371,46 @@ module.exports = {
 
 ### Monthly Costs (Approximate)
 
-| Service                    | Tier      | Cost          |
-| -------------------------- | --------- | ------------- |
-| **Vercel**                 | Pro       | $20           |
-| **MongoDB Atlas**          | M10       | $60           |
-| **OpenVC**                 | API/CSV   | $199-499\*    |
-| **OpenAI API**             | Pay-as-go | $30-80\*\*    |
-| **Constant Contact**       | Core      | $20           |
-| **People Data Labs** (opt) | Pay-as-go | $0-100\*\*\*  |
-| **Apollo.io** (opt)        | Pay-as-go | $0-100\*\*\*  |
-| **Total**                  |           | **~$329-879** |
+| Service                    | Tier      | Cost             | Notes                                       |
+| -------------------------- | --------- | ---------------- | ------------------------------------------- |
+| **Vercel**                 | Pro       | $20              | Hosting + cron jobs                         |
+| **MongoDB Atlas**          | M10       | $60              | Database                                    |
+| **OpenAI API**             | Pay-as-go | $50-150\*        | Verification + enrichment + scoring         |
+| **Constant Contact**       | Core      | $20              | Email outreach                              |
+| **People Data Labs** (opt) | Pay-as-go | $0-50\*\*        | Only for missing contact info               |
+| **Apollo.io** (opt)        | Pay-as-go | $0-50\*\*        | Email verification (optional)               |
+| **Total**                  |           | **~$150-350/mo** | **vs $1,149-1,249 for Crunchbase approach** |
 
-\* OpenVC pricing varies by plan - check current rates  
-\*\* Reduced AI costs due to cleaner OpenVC data requiring less processing  
-\*\*\* Optional enrichment only when contact info missing from OpenVC
+\* **OpenAI costs breakdown:**
 
-**Cost Savings vs Crunchbase Approach: $370-870/month**
+- AI Verification: ~100-200 prospects/week × $0.05-0.10 = $20-80/mo
+- Enrichment & Scoring: ~50 new prospects/week × $0.10-0.15 = $20-30/mo
+- Outreach generation: ~20 campaigns/week × $0.05 = $4-10/mo
+
+\*\* Only used when public data is incomplete (estimated 10-20% of records)
+
+### Cost Comparison
+
+| Approach                  | Monthly Cost | Annual Cost    | Savings                |
+| ------------------------- | ------------ | -------------- | ---------------------- |
+| **Original (Crunchbase)** | $1,149-1,249 | $13,788-14,988 | -                      |
+| **New (Multi-Source)**    | $150-350     | $1,800-4,200   | **$9,988-13,188/year** |
+
+### Why It's Cheaper
+
+✅ **No expensive API subscriptions** ($0 vs $999-35,000/year)  
+✅ **Public data is free** (OpenVC lists, firm pages, directories)  
+✅ **Client provides data** (CSV uploads from events/partners)  
+✅ **AI only for verification/enrichment** (not raw data acquisition)  
+✅ **Human-in-the-loop reduces AI waste** (no processing of bad data)
+
+### Scalability
+
+- **Current volume**: 100-200 new prospects/month → **~$150-200/mo**
+- **High volume**: 500-1000 prospects/month → **~$300-450/mo**
+- **Enterprise volume**: 2000+ prospects/month → **~$600-800/mo**
+
+Still **dramatically cheaper** than single-API approach at any scale.
 
 ### Client Billing
 
@@ -1392,10 +1559,11 @@ module.exports = {
 
 ## Change Log
 
-| Date       | Version | Changes                                     | Author       |
-| ---------- | ------- | ------------------------------------------- | ------------ |
-| 2025-10-27 | 1.1     | Updated to use OpenVC instead of Crunchbase | AI Assistant |
-| 2025-10-25 | 1.0     | Initial specification                       | [Your Name]  |
+| Date       | Version | Changes                                                                    | Author       |
+| ---------- | ------- | -------------------------------------------------------------------------- | ------------ |
+| 2025-10-31 | 1.2     | **Major pivot**: Multi-source collection + AI verification + human-in-loop | AI Assistant |
+| 2025-10-27 | 1.1     | Updated to use OpenVC instead of Crunchbase                                | AI Assistant |
+| 2025-10-25 | 1.0     | Initial specification                                                      | [Your Name]  |
 
 ---
 
@@ -1431,5 +1599,6 @@ CRON_SECRET=random-secret-for-cron-endpoint
 ---
 
 **Document Status**: ✅ Ready for Development  
-**Last Updated**: October 27, 2025  
-**Next Review**: Start of Week 2
+**Last Updated**: October 31, 2025  
+**Version**: 1.2 (Major Architecture Pivot)  
+**Next Review**: Implementation kickoff
