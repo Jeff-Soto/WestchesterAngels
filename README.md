@@ -11,11 +11,12 @@
 
 The AI Investor Prospecting Engine helps **Westchester Angels** identify and prioritize the most relevant investors for their portfolio companies. The system automatically:
 
-- 🔍 **Discovers** investors from Crunchbase based on sector and geography
-- 🤖 **Enriches** profiles using OpenAI to extract insights
-- 📊 **Scores** each prospect based on fit (0-100)
-- 🎯 **Prioritizes** the best matches for outreach
-- 📧 **Facilitates** email outreach campaigns
+- 🔍 **Imports** investor profiles from OpenVC (fund, contact, stage, sector, check size)
+- 🔗 **Enriches** missing contact info using People Data Labs or Apollo (optional)
+- 🤖 **Analyzes** each investor using AI to determine fit with Westchester Angels
+- 📊 **Scores** each prospect (0-100) based on sector, stage, geography, and check size
+- 💬 **Generates** personalized outreach message suggestions
+- 📧 **Facilitates** email campaigns via Constant Contact
 - 📈 **Tracks** engagement and results
 
 ---
@@ -24,14 +25,16 @@ The AI Investor Prospecting Engine helps **Westchester Angels** identify and pri
 
 ### Automated Data Pipeline
 
-- Weekly automated data refresh from Crunchbase
-- AI-powered enrichment using OpenAI GPT-4
+- Weekly automated data import from OpenVC
+- Optional contact enrichment via People Data Labs/Apollo
+- AI-powered fit scoring using OpenAI GPT-4
 - Intelligent deduplication and normalization
 
-### Smart Scoring
+### Smart Scoring & Insights
 
 - Multi-factor fit scoring (sector, stage, geography, check size)
-- AI-generated rationale for each score
+- AI-generated rationale for each prospect
+- Suggested personalized outreach messages
 - Historical score tracking
 
 ### Powerful Dashboard
@@ -43,8 +46,9 @@ The AI Investor Prospecting Engine helps **Westchester Angels** identify and pri
 
 ### Integrated Outreach
 
-- Email campaign management
-- Template system with personalization
+- Constant Contact integration for email campaigns
+- AI-generated personalized message templates
+- CSV export for bulk outreach
 - Open/reply tracking
 - CAN-SPAM/GDPR compliant
 
@@ -62,8 +66,9 @@ The AI Investor Prospecting Engine helps **Westchester Angels** identify and pri
 - **Frontend**: Next.js 15 (App Router, JavaScript)
 - **Database**: MongoDB Atlas
 - **AI Engine**: OpenAI GPT-4
-- **Data Source**: Crunchbase API
-- **Email**: SendGrid / Constant Contact
+- **Primary Data Source**: OpenVC (API/CSV)
+- **Optional Enrichment**: People Data Labs, Apollo.io
+- **Email**: Constant Contact (primary) / SendGrid
 - **Authentication**: NextAuth.js
 - **Hosting**: Vercel
 - **Scheduler**: Vercel Cron Jobs
@@ -81,9 +86,11 @@ WestchesterAngels/
 │   │   └── login/        # Authentication
 │   ├── lib/              # Shared utilities
 │   │   ├── mongodb.js    # Database connection
-│   │   ├── crunchbase.js # Crunchbase API client
+│   │   ├── openvc.js     # OpenVC API client
 │   │   ├── openai.js     # OpenAI helpers
-│   │   └── scoring.js    # Fit score algorithm
+│   │   ├── enrichment.js # People Data Labs/Apollo
+│   │   ├── scoring.js    # Fit score algorithm
+│   │   └── email.js      # Constant Contact integration
 │   └── middleware.js     # Auth protection
 ├── public/               # Static assets
 ├── scripts/              # Utility scripts
@@ -99,9 +106,10 @@ WestchesterAngels/
 
 - Node.js 22+ installed (LTS recommended)
 - MongoDB Atlas account
-- Crunchbase API key (Enterprise tier)
+- OpenVC API key or CSV access
 - OpenAI API key
-- SendGrid or Constant Contact account
+- Constant Contact account
+- (Optional) People Data Labs or Apollo API keys for contact enrichment
 
 ### Installation
 
@@ -130,9 +138,11 @@ Edit `.env.local` and add your API keys:
 MONGODB_URI=mongodb+srv://...
 NEXTAUTH_SECRET=your-secret-here
 NEXTAUTH_URL=http://localhost:3000
-CRUNCHBASE_API_KEY=...
+OPENVC_API_KEY=...
 OPENAI_API_KEY=sk-...
-SENDGRID_API_KEY=SG...
+CONSTANT_CONTACT_API_KEY=...
+PEOPLE_DATA_LABS_API_KEY=...  # Optional
+APOLLO_API_KEY=...             # Optional
 ```
 
 4. **Initialize the database**
@@ -246,7 +256,8 @@ vercel
 
 ### Automated (No Action Required)
 
-- ✅ Weekly data refresh from Crunchbase (Sundays 2 AM UTC)
+- ✅ Weekly data import from OpenVC (Sundays 2 AM UTC)
+- ✅ AI-powered fit scoring and message generation
 - ✅ Database backups (MongoDB Atlas automated)
 - ✅ SSL certificate renewal (Vercel managed)
 
@@ -260,7 +271,8 @@ vercel
 ### Quarterly Tasks
 
 - Update OpenAI prompts if needed
-- Optimize Crunchbase queries
+- Review OpenVC data quality and coverage
+- Optimize enrichment strategy
 - Security audit
 - Client feedback review
 
@@ -313,10 +325,12 @@ See [TECHNICAL_SPEC.md](TECHNICAL_SPEC.md#troubleshooting-guide) for detailed tr
 ### Phase 1: MVP (Weeks 1-4) ✅ In Progress
 
 - [x] Project setup and infrastructure
-- [ ] Crunchbase integration
-- [ ] AI enrichment pipeline
-- [ ] Dashboard UI
-- [ ] WordPress integration
+- [x] Dashboard UI with collapsible analytics
+- [ ] OpenVC integration
+- [ ] Optional contact enrichment (People Data Labs/Apollo)
+- [ ] AI fit scoring and message generation
+- [ ] WordPress iframe integration
+- [ ] Constant Contact integration
 
 ### Phase 2: Enhancements (Post-Launch)
 
@@ -362,15 +376,15 @@ This project is proprietary and confidential. All rights reserved.
 
 ## 🙏 Acknowledgments
 
-- Crunchbase for investor data
-- OpenAI for AI enrichment
+- OpenVC for investor database
+- OpenAI for AI-powered scoring and insights
+- People Data Labs & Apollo.io for contact enrichment
+- Constant Contact for email campaigns
 - Vercel for hosting and deployment
 - MongoDB for database services
 
 ---
 
 **Status**: 🚧 Active Development  
-**Last Updated**: October 25, 2025  
+**Last Updated**: October 27, 2025  
 **Version**: 1.0.0-alpha
-
-

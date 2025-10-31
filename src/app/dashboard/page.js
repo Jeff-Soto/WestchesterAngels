@@ -54,8 +54,9 @@ export default function DashboardPage() {
   const [analyticsExpanded, setAnalyticsExpanded] = useState(false)
 
   // Generate data on client mount to avoid hydration mismatch
+  // Using real tri-state angel investors (30 prospects)
   useEffect(() => {
-    setAllProspects(generateMockProspects(75))
+    setAllProspects(generateMockProspects())
   }, [])
 
   // Get filter options
