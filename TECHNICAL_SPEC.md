@@ -2,15 +2,16 @@
 
 ## Project Overview
 
-The AI Investor Prospecting Engine is an intelligent system designed to discover, enrich, and prioritize prospective investors for the client. The platform combines Crunchbase data with AI-powered enrichment and scoring to deliver actionable investor insights through a secure, embeddable dashboard.
+The AI Investor Prospecting Engine is an intelligent system designed to discover, enrich, and prioritize prospective investors for the client. The platform combines OpenVC investor data with AI-powered enrichment and scoring to deliver actionable investor insights through a secure, embeddable dashboard.
 
 ### Key Features
 
-- Automated weekly data ingestion from Crunchbase
-- AI-powered investor enrichment and scoring
+- Automated weekly data ingestion from OpenVC
+- Optional contact enrichment via People Data Labs or Apollo
+- AI-powered investor fit scoring and summarization
 - Real-time filtering by sector, geography, and fit score
 - Secure passwordless authentication
-- Email outreach capabilities
+- Email outreach capabilities via Constant Contact
 - WordPress integration via iframe
 - Admin controls for manual lead uploads
 
@@ -36,9 +37,9 @@ The AI Investor Prospecting Engine is an intelligent system designed to discover
 ### AI & Data Services
 
 - **AI Engine**: OpenAI API (GPT-4 recommended)
-- **Data Source**: Crunchbase API
-- **Optional Enrichment**: Apollo.io, Clearbit APIs
-- **Email Service**: SendGrid or Constant Contact
+- **Primary Data Source**: OpenVC (API or CSV)
+- **Optional Enrichment**: People Data Labs, Apollo.io (for contact info only)
+- **Email Service**: Constant Contact (primary) or SendGrid
 
 ### DevOps
 
@@ -80,8 +81,8 @@ The AI Investor Prospecting Engine is an intelligent system designed to discover
                │                │               │
                │                │               │
         ┌──────▼──────┐  ┌─────▼─────┐  ┌─────▼──────┐
-        │  MongoDB    │  │  OpenAI   │  │ Crunchbase │
-        │   Atlas     │  │    API    │  │    API     │
+        │  MongoDB    │  │  OpenAI   │  │   OpenVC   │
+        │   Atlas     │  │    API    │  │  API/CSV   │
         └─────────────┘  └───────────┘  └────────────┘
 ```
 
@@ -92,14 +93,15 @@ The AI Investor Prospecting Engine is an intelligent system designed to discover
 ### 1. Data Ingestion (Weekly Automated)
 
 ```
-Vercel Cron → Crunchbase API Query → Raw Investor Data
-                (by region & sector)
+Vercel Cron → OpenVC API/CSV Import → Raw Investor Profiles
+              (fund name, contact, stage, sector, check size)
 ```
 
 ### 2. Data Processing Pipeline
 
 ```
-Raw Data → Normalize → Enrich (OpenAI) → Score (AI) → Store (MongoDB)
+OpenVC Data → Normalize → Optional Contact Enrichment → AI Scoring → Store (MongoDB)
+                          (People Data Labs/Apollo)      (OpenAI)
 ```
 
 ### 3. Dashboard Access
@@ -117,10 +119,10 @@ User Login → Auth Check → Filter/Query → Display Results → Initiate Outr
          │
          ▼
 ┌──────────────────────────────────────────────────┐
-│  1. Crunchbase API Query                         │
-│     - Query by region (e.g., NY, CA, MA)        │
-│     - Filter by investor type                    │
-│     - Pull recent funding rounds                 │
+│  1. OpenVC Data Import                           │
+│     - Pull via API or CSV download               │
+│     - Already includes: fund, contact, stage,    │
+│       sector focus, check size                   │
 └────────┬─────────────────────────────────────────┘
          │
          ▼
@@ -133,19 +135,19 @@ User Login → Auth Check → Filter/Query → Display Results → Initiate Outr
          │
          ▼
 ┌──────────────────────────────────────────────────┐
-│  3. AI Enrichment (OpenAI)                       │
-│     - Infer sector focus                         │
-│     - Determine check size range                 │
-│     - Extract stage preferences                  │
-│     - Analyze portfolio fit                      │
+│  3. Optional Contact Enrichment                  │
+│     - People Data Labs: Fill missing emails      │
+│     - Apollo: Verify contacts, add LinkedIn      │
+│     - Only if OpenVC data incomplete             │
 └────────┬─────────────────────────────────────────┘
          │
          ▼
 ┌──────────────────────────────────────────────────┐
-│  4. Scoring Engine                               │
+│  4. AI Layer (OpenAI)                            │
 │     - Calculate fit_score (0-100)                │
-│     - Generate AI rationale                      │
-│     - Extract key features                       │
+│     - Analyze sector relevance to WA portfolio   │
+│     - Generate summary/rationale                 │
+│     - Create suggested outreach messages         │
 └────────┬─────────────────────────────────────────┘
          │
          ▼
@@ -215,7 +217,7 @@ Tracks data sources and fetch history.
 ```javascript
 {
   _id: ObjectId,
-  type: String,              // "crunchbase", "manual_csv", "apollo"
+  type: String,              // "openvc", "manual_csv", "people_data_labs", "apollo"
   url: String,               // API endpoint or file path
   query_params: Object,      // Search parameters used
   fetched_at: Date,
@@ -361,62 +363,116 @@ System activity logs.
 
 ## API Integrations
 
-### Crunchbase API
+### OpenVC API/CSV
 
-**Purpose**: Primary data source for investor information.
+**Purpose**: Primary data source for investor profiles.
 
-**Endpoints to Use**:
+**Access Methods**:
 
-- `/searches/organizations` - Find investor firms
-- `/entities/organizations/{id}` - Get detailed org info
-- `/searches/people` - Find individual investors
+- **API**: Pull investor data programmatically (preferred)
+- **CSV Export**: Download and import investor database
 
-**Key Fields to Extract**:
+**Key Fields Provided**:
 
-- Organization name
-- Location
-- Investment focus (sectors)
+- Fund name / organization
+- Contact name and email
+- Investment stage preferences (Seed, Series A, etc.)
+- Sector focus
+- Check size range
+- Geographic location
+- LinkedIn / website URLs
 - Portfolio companies
-- Recent investments
-- Contact information
 
-**Rate Limits**: 200 requests/minute (Enterprise plan)
+**Data Quality**: Pre-structured for investor discovery, minimal normalization needed.
+
+**Update Frequency**: Weekly or as available from OpenVC
 
 **Error Handling**:
 
-- Implement exponential backoff
-- Cache responses for 7 days
-- Log failed requests for manual review
+- Implement retry logic for API calls
+- Validate CSV structure before import
+- Log missing or malformed fields
+- Cache responses to minimize API calls
+
+---
+
+### People Data Labs API (Optional)
+
+**Purpose**: Enrich missing contact information.
+
+**Use When**: OpenVC data lacks email or LinkedIn URL.
+
+**Key Fields to Enrich**:
+
+- Professional email addresses
+- LinkedIn profile URLs
+- Current job titles
+- Professional background
+
+**Rate Limits**: Varies by plan
+
+**Compliance**: Professional data only, GDPR-compliant
+
+---
+
+### Apollo.io API (Optional)
+
+**Purpose**: Verify and enhance contact data.
+
+**Use When**: Need to verify email deliverability or find alternative contacts.
+
+**Key Fields**:
+
+- Email verification
+- LinkedIn URLs
+- Phone numbers (business only)
+- Company information
+
+**Rate Limits**: Varies by plan
+
+**Compliance**: B2B data only, no personal information
 
 ---
 
 ### OpenAI API
 
-**Purpose**: Enrich and score investor profiles.
+**Purpose**: AI-powered fit scoring and outreach message generation.
 
 **Model**: GPT-4 (or GPT-4-turbo)
 
 **Use Cases**:
 
-1. **Sector Classification**
+1. **Fit Score Calculation**
 
 ```javascript
-const prompt = `Based on this investor's portfolio: ${portfolioCompanies}, 
-what are their primary sector focuses? Return as JSON array.`;
+const prompt = `Analyze this investor's profile and rate their fit for Westchester Angels.
+Investor: ${investorProfile}
+WA Focus: Early-stage tech companies in NY/CT/NJ region
+Consider: sector alignment, stage preferences, check size, geographic proximity
+Score 0-100 and explain reasoning.`;
 ```
 
-2. **Fit Score Calculation**
+2. **Sector Relevance Analysis**
 
 ```javascript
-const prompt = `Rate this investor's fit for a ${clientSector} company 
-in ${clientStage} stage, seeking ${checkSize}. Score 0-100 and explain why.`;
+const prompt = `Based on this investor's portfolio and stated focus areas,
+determine their sector relevance to: ${targetSectors}.
+Return relevance score and key insights.`;
 ```
 
 3. **Summary Generation**
 
 ```javascript
-const prompt = `Summarize why this investor would be a good fit in 2-3 sentences: 
-${investorProfile}`;
+const prompt = `Create a 2-3 sentence summary of why ${investorName} would be 
+a good fit for Westchester Angels, based on: ${investorProfile}`;
+```
+
+4. **Outreach Message Suggestions**
+
+```javascript
+const prompt = `Generate a personalized outreach email template for ${investorName}
+at ${fundName}. Reference their investment in ${relevantPortfolioCompany}.
+Keep it professional, concise, and focused on mutual fit.`;
 ```
 
 **Rate Limits**: 10,000 TPM (tokens per minute)
@@ -424,42 +480,32 @@ ${investorProfile}`;
 **Cost Optimization**:
 
 - Batch requests where possible
-- Use GPT-3.5-turbo for simpler tasks
-- Cache enrichment results
+- Use GPT-3.5-turbo for simpler summaries
+- Cache scoring results (refresh monthly)
+- Limit enrichment to high-priority prospects
 
 ---
 
-### SendGrid / Constant Contact
+### Constant Contact
 
-**Purpose**: Email outreach campaigns.
+**Purpose**: Email outreach campaigns (Primary email service).
 
 **Integration Points**:
 
-- Send individual emails
-- Create contact lists
+- Send individual and bulk emails
+- Create segmented contact lists
 - Track open/click rates
-- Handle unsubscribes
+- Handle unsubscribes automatically
+- Export contacts to CSV
 
 **Required Setup**:
 
 - Domain authentication (SPF/DKIM)
 - Unsubscribe link in all emails
 - Bounce handling webhook
+- List management and segmentation
 
----
-
-### Optional: Apollo.io / Clearbit
-
-**Purpose**: Email enrichment and verification.
-
-**Use When**: Crunchbase doesn't provide direct contact info.
-
-**Fields to Enrich**:
-
-- Email addresses
-- Phone numbers
-- Social profiles
-- Company size/funding
+**Alternative**: SendGrid can be used if Constant Contact integration proves challenging
 
 ---
 
@@ -478,13 +524,16 @@ NEXTAUTH_SECRET=random_secret_here
 NEXTAUTH_URL=https://yourdomain.com
 
 # APIs
-CRUNCHBASE_API_KEY=...
+OPENVC_API_KEY=...
 OPENAI_API_KEY=sk-...
-SENDGRID_API_KEY=SG...
+CONSTANT_CONTACT_API_KEY=...
 
-# Optional
+# Optional Enrichment
+PEOPLE_DATA_LABS_API_KEY=...
 APOLLO_API_KEY=...
-CLEARBIT_API_KEY=...
+
+# Alternative Email Service
+SENDGRID_API_KEY=SG...
 ```
 
 ---
@@ -528,10 +577,11 @@ CLEARBIT_API_KEY=...
 
 #### Data Source Compliance
 
-- ✅ Crunchbase: Licensed B2B data
-- ✅ Apollo.io: GDPR/CCPA compliant
-- ✅ Clearbit: Business data only
-- ❌ LinkedIn scraping: Prohibited
+- ✅ OpenVC: Licensed investor database, publicly available professional data
+- ✅ People Data Labs: GDPR/CCPA compliant, professional data only
+- ✅ Apollo.io: GDPR/CCPA compliant, B2B focus
+- ❌ LinkedIn scraping: Prohibited (use official APIs or provided URLs only)
+- ⚠️ Use professional contact info only - no personal emails, home addresses, or personal phone numbers
 
 ---
 
@@ -601,10 +651,11 @@ WestchesterAngels/
 │   │   └── page.js                    # Landing/redirect
 │   ├── lib/
 │   │   ├── mongodb.js                 # DB connection
-│   │   ├── crunchbase.js              # Crunchbase API client
+│   │   ├── openvc.js                  # OpenVC API client
 │   │   ├── openai.js                  # OpenAI helpers
+│   │   ├── enrichment.js              # People Data Labs/Apollo
 │   │   ├── scoring.js                 # Fit score algorithm
-│   │   ├── email.js                   # SendGrid/Constant Contact
+│   │   ├── email.js                   # Constant Contact/SendGrid
 │   │   └── utils.js                   # Shared utilities
 │   ├── middleware.js                  # Auth protection
 │   └── styles/
@@ -649,9 +700,10 @@ WestchesterAngels/
 
 #### Day 5-7: API Integrations
 
-- [ ] Obtain Crunchbase API credentials
+- [ ] Obtain OpenVC API credentials or CSV access
 - [ ] Obtain OpenAI API key
-- [ ] Obtain SendGrid/Constant Contact credentials
+- [ ] Obtain Constant Contact credentials
+- [ ] (Optional) Obtain People Data Labs or Apollo API keys
 - [ ] Create API client libraries in `/src/lib`
 - [ ] Test each integration independently
 - [ ] Store all keys in Vercel environment variables
@@ -660,29 +712,29 @@ WestchesterAngels/
 
 ### Phase 2: Data Pipeline (Week 2)
 
-#### Day 1-2: Crunchbase Integration
+#### Day 1-2: OpenVC Integration
 
-- [ ] Build Crunchbase query functions
-- [ ] Implement pagination handling
+- [ ] Build OpenVC data import functions (API or CSV)
+- [ ] Implement pagination/batch handling
 - [ ] Create normalization logic
 - [ ] Add deduplication
-- [ ] Test with sample queries
+- [ ] Test with sample data
 
-#### Day 3-4: AI Enrichment
+#### Day 3-4: Optional Contact Enrichment
 
-- [ ] Design OpenAI prompt templates
-- [ ] Implement enrichment functions
+- [ ] Implement People Data Labs integration
+- [ ] Add Apollo.io email verification
+- [ ] Create conditional enrichment logic (only if data missing)
 - [ ] Add error handling and retries
-- [ ] Create batch processing logic
-- [ ] Test with sample investor profiles
+- [ ] Test with sample profiles
 
-#### Day 5-6: Scoring Engine
+#### Day 5-6: AI Scoring Engine
 
-- [ ] Define fit score algorithm
-- [ ] Implement feature extraction
-- [ ] Create AI-powered scoring
+- [ ] Design OpenAI fit scoring prompts
+- [ ] Implement AI-powered scoring (0-100)
 - [ ] Generate rationale summaries
-- [ ] Store scores in database
+- [ ] Create outreach message suggestions
+- [ ] Store scores and AI outputs in database
 
 #### Day 7: Cron Job Setup
 
@@ -795,8 +847,9 @@ _Runs every Sunday at 2 AM UTC_
 ```javascript
 import { NextResponse } from "next/server";
 import { connectToDatabase } from "@/lib/mongodb";
-import { queryCrunchbase } from "@/lib/crunchbase";
-import { enrichWithOpenAI } from "@/lib/openai";
+import { fetchOpenVCData } from "@/lib/openvc";
+import { enrichContact } from "@/lib/enrichment";
+import { scoreWithAI } from "@/lib/openai";
 import { computeFitScore } from "@/lib/scoring";
 
 export async function GET(request) {
@@ -815,76 +868,73 @@ export async function GET(request) {
       errors: [],
     };
 
-    // 1. Query Crunchbase for investors
-    const regions = ["New York", "California", "Massachusetts"];
-    const sectors = ["FinTech", "SaaS", "HealthTech"];
+    // 1. Import OpenVC data (API or CSV)
+    const investors = await fetchOpenVCData();
+    results.fetched = investors.length;
 
-    for (const region of regions) {
-      for (const sector of sectors) {
-        const investors = await queryCrunchbase({ region, sector });
-        results.fetched += investors.length;
+    // 2. Process each investor
+    for (const investor of investors) {
+      try {
+        // Normalize data
+        const normalized = normalizeInvestor(investor);
 
-        // 2. Process each investor
-        for (const investor of investors) {
-          try {
-            // Normalize data
-            const normalized = normalizeInvestor(investor);
+        // Check if already exists
+        const existing = await db.collection("prospects").findOne({
+          org: normalized.org,
+        });
 
-            // Check if already exists
-            const existing = await db.collection("prospects").findOne({
-              org: normalized.org,
-            });
-
-            if (
-              existing &&
-              existing.last_enriched_at > Date.now() - 30 * 24 * 60 * 60 * 1000
-            ) {
-              // Skip if enriched in last 30 days
-              continue;
-            }
-
-            // 3. Enrich with OpenAI
-            const enriched = await enrichWithOpenAI(normalized);
-            results.enriched++;
-
-            // 4. Compute fit score
-            const score = await computeFitScore(enriched);
-            results.scored++;
-
-            // 5. Save to MongoDB
-            await db.collection("prospects").updateOne(
-              { org: normalized.org },
-              {
-                $set: {
-                  ...enriched,
-                  fit_score: score.score,
-                  why_summary: score.rationale,
-                  last_enriched_at: new Date(),
-                  updated_at: new Date(),
-                },
-                $setOnInsert: {
-                  created_at: new Date(),
-                  status: "new",
-                },
-              },
-              { upsert: true }
-            );
-
-            // Save score history
-            await db.collection("scores").insertOne({
-              prospect_id: existing?._id,
-              fit_score: score.score,
-              features: score.features,
-              computed_at: new Date(),
-              model_version: "1.0",
-            });
-          } catch (error) {
-            results.errors.push({
-              investor: investor.name,
-              error: error.message,
-            });
-          }
+        if (
+          existing &&
+          existing.last_enriched_at > Date.now() - 30 * 24 * 60 * 60 * 1000
+        ) {
+          // Skip if enriched in last 30 days
+          continue;
         }
+
+        // 3. Optional: Enrich missing contact info
+        let enriched = normalized;
+        if (!normalized.email || !normalized.linkedin_url) {
+          enriched = await enrichContact(normalized);
+          results.enriched++;
+        }
+
+        // 4. AI Scoring with OpenAI
+        const aiScore = await scoreWithAI(enriched);
+        results.scored++;
+
+        // 5. Save to MongoDB
+        await db.collection("prospects").updateOne(
+          { org: normalized.org },
+          {
+            $set: {
+              ...enriched,
+              fit_score: aiScore.score,
+              why_summary: aiScore.summary,
+              suggested_outreach: aiScore.outreach_template,
+              last_enriched_at: new Date(),
+              updated_at: new Date(),
+            },
+            $setOnInsert: {
+              created_at: new Date(),
+              status: "new",
+            },
+          },
+          { upsert: true }
+        );
+
+        // Save score history
+        await db.collection("scores").insertOne({
+          prospect_id: existing?._id,
+          fit_score: aiScore.score,
+          features: aiScore.features,
+          computed_at: new Date(),
+          model_version: "1.0",
+        });
+      } catch (error) {
+        results.errors.push({
+          investor: investor.name,
+          error: error.message,
+        });
       }
     }
 
@@ -914,17 +964,26 @@ export async function GET(request) {
 }
 
 function normalizeInvestor(raw) {
+  // OpenVC data is already well-structured
   return {
-    name: raw.properties?.name || "",
-    org: raw.properties?.organization_name || "",
+    name: raw.contact_name || "",
+    org: raw.fund_name || "",
     location: {
-      city: raw.properties?.location_city || "",
-      state: raw.properties?.location_region || "",
-      country: raw.properties?.location_country || "US",
+      city: raw.city || "",
+      state: raw.state || "",
+      country: raw.country || "US",
     },
-    linkedin_url: raw.properties?.linkedin_url || "",
-    website: raw.properties?.website_url || "",
-    email: raw.properties?.email || null,
+    sectors: raw.sectors || [],
+    stage_preferences: raw.stages || [],
+    check_size: {
+      min: raw.check_size_min || 0,
+      max: raw.check_size_max || 0,
+    },
+    linkedin_url: raw.linkedin || "",
+    website: raw.website || "",
+    email: raw.email || null,
+    phone: raw.phone || null,
+    portfolio: raw.portfolio_companies || [],
   };
 }
 ```
@@ -1169,16 +1228,22 @@ module.exports = {
 
 ### Monthly Costs (Approximate)
 
-| Service            | Tier       | Cost              |
-| ------------------ | ---------- | ----------------- |
-| **Vercel**         | Pro        | $20               |
-| **MongoDB Atlas**  | M10        | $60               |
-| **Crunchbase API** | Enterprise | $999              |
-| **OpenAI API**     | Pay-as-go  | $50-150\*         |
-| **SendGrid**       | Essentials | $20               |
-| **Total**          |            | **~$1,149-1,249** |
+| Service                    | Tier      | Cost          |
+| -------------------------- | --------- | ------------- |
+| **Vercel**                 | Pro       | $20           |
+| **MongoDB Atlas**          | M10       | $60           |
+| **OpenVC**                 | API/CSV   | $199-499\*    |
+| **OpenAI API**             | Pay-as-go | $30-80\*\*    |
+| **Constant Contact**       | Core      | $20           |
+| **People Data Labs** (opt) | Pay-as-go | $0-100\*\*\*  |
+| **Apollo.io** (opt)        | Pay-as-go | $0-100\*\*\*  |
+| **Total**                  |           | **~$329-879** |
 
-\*Depends on volume; estimate 500 enrichments/week @ $0.01 each
+\* OpenVC pricing varies by plan - check current rates  
+\*\* Reduced AI costs due to cleaner OpenVC data requiring less processing  
+\*\*\* Optional enrichment only when contact info missing from OpenVC
+
+**Cost Savings vs Crunchbase Approach: $370-870/month**
 
 ### Client Billing
 
@@ -1327,9 +1392,10 @@ module.exports = {
 
 ## Change Log
 
-| Date       | Version | Changes               | Author      |
-| ---------- | ------- | --------------------- | ----------- |
-| 2025-10-25 | 1.0     | Initial specification | [Your Name] |
+| Date       | Version | Changes                                     | Author       |
+| ---------- | ------- | ------------------------------------------- | ------------ |
+| 2025-10-27 | 1.1     | Updated to use OpenVC instead of Crunchbase | AI Assistant |
+| 2025-10-25 | 1.0     | Initial specification                       | [Your Name]  |
 
 ---
 
@@ -1339,8 +1405,11 @@ module.exports = {
 
 - [Next.js App Router Docs](https://nextjs.org/docs/app)
 - [MongoDB Atlas Documentation](https://www.mongodb.com/docs/atlas/)
-- [Crunchbase API Documentation](https://data.crunchbase.com/docs)
+- [OpenVC](https://www.openvc.app/) - Primary data source
 - [OpenAI API Reference](https://platform.openai.com/docs/api-reference)
+- [People Data Labs API](https://docs.peopledatalabs.com/)
+- [Apollo.io API](https://apolloio.github.io/apollo-api-docs/)
+- [Constant Contact API](https://developer.constantcontact.com/)
 - [NextAuth.js Documentation](https://next-auth.js.org/)
 - [Vercel Cron Jobs](https://vercel.com/docs/cron-jobs)
 
@@ -1351,14 +1420,16 @@ module.exports = {
 MONGODB_URI=mongodb://localhost:27017/investors-dev
 NEXTAUTH_SECRET=dev-secret-change-in-production
 NEXTAUTH_URL=http://localhost:3000
-CRUNCHBASE_API_KEY=your-key-here
+OPENVC_API_KEY=your-key-here
 OPENAI_API_KEY=sk-...
-SENDGRID_API_KEY=SG...
+CONSTANT_CONTACT_API_KEY=your-key-here
+PEOPLE_DATA_LABS_API_KEY=your-key-here  # Optional
+APOLLO_API_KEY=your-key-here             # Optional
 CRON_SECRET=random-secret-for-cron-endpoint
 ```
 
 ---
 
 **Document Status**: ✅ Ready for Development  
-**Last Updated**: October 25, 2025  
+**Last Updated**: October 27, 2025  
 **Next Review**: Start of Week 2

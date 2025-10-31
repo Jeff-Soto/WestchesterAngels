@@ -8,7 +8,7 @@
 
 ✅ Node.js 20+ installed (LTS recommended)  
 ✅ MongoDB Atlas account  
-✅ API keys (Crunchbase, OpenAI, SendGrid)
+✅ API keys (OpenVC, OpenAI, Constant Contact)
 
 ---
 
@@ -31,9 +31,9 @@ Create `.env.local` in the root directory:
 MONGODB_URI=mongodb+srv://your-connection-string
 NEXTAUTH_SECRET=generate-random-32-char-string
 NEXTAUTH_URL=http://localhost:3000
-CRUNCHBASE_API_KEY=your-crunchbase-key
+OPENVC_API_KEY=your-openvc-key
 OPENAI_API_KEY=sk-your-openai-key
-SENDGRID_API_KEY=SG.your-sendgrid-key
+CONSTANT_CONTACT_API_KEY=your-constant-contact-key
 CRON_SECRET=another-random-string
 ```
 
@@ -81,14 +81,15 @@ WestchesterAngels/
 
 ## Key Files to Know
 
-| File                                     | Purpose               |
-| ---------------------------------------- | --------------------- |
-| `src/lib/mongodb.js`                     | Database connection   |
-| `src/lib/crunchbase.js`                  | Crunchbase API client |
-| `src/lib/openai.js`                      | AI enrichment helpers |
-| `src/lib/scoring.js`                     | Fit score algorithm   |
-| `src/app/api/cron/refresh-data/route.js` | Weekly data pipeline  |
-| `src/app/dashboard/page.js`              | Main dashboard UI     |
+| File                                     | Purpose                       |
+| ---------------------------------------- | ----------------------------- |
+| `src/lib/mongodb.js`                     | Database connection           |
+| `src/lib/openvc.js`                      | OpenVC API client             |
+| `src/lib/openai.js`                      | AI scoring helpers            |
+| `src/lib/enrichment.js`                  | Contact enrichment (optional) |
+| `src/lib/scoring.js`                     | Fit score algorithm           |
+| `src/app/api/cron/refresh-data/route.js` | Weekly data pipeline          |
+| `src/app/dashboard/page.js`              | Main dashboard UI             |
 
 ---
 
@@ -265,7 +266,8 @@ npm run build
 - **MongoDB Docs**: https://www.mongodb.com/docs/
 - **Vercel Docs**: https://vercel.com/docs
 - **OpenAI API**: https://platform.openai.com/docs
-- **Crunchbase API**: https://data.crunchbase.com/docs
+- **OpenVC**: https://www.openvc.app/
+- **Constant Contact API**: https://developer.constantcontact.com/
 
 ---
 

@@ -33,12 +33,12 @@ NEXTAUTH_SECRET=your-random-secret-here-min-32-chars
 NEXTAUTH_URL=http://localhost:3000
 
 # =============================================================================
-# CRUNCHBASE API
+# OPENVC API
 # =============================================================================
 
-# Crunchbase API key (Enterprise tier required)
-# Get this from: https://data.crunchbase.com/docs/getting-started
-CRUNCHBASE_API_KEY=your-crunchbase-api-key-here
+# OpenVC API key for investor data
+# Get this from: https://www.openvc.app/
+OPENVC_API_KEY=your-openvc-api-key-here
 
 # =============================================================================
 # OPENAI API
@@ -49,25 +49,25 @@ CRUNCHBASE_API_KEY=your-crunchbase-api-key-here
 OPENAI_API_KEY=sk-your-openai-api-key-here
 
 # =============================================================================
-# EMAIL SERVICE (Choose one)
+# EMAIL SERVICE
 # =============================================================================
 
-# Option 1: SendGrid
-SENDGRID_API_KEY=SG.your-sendgrid-api-key-here
+# Primary: Constant Contact
+CONSTANT_CONTACT_API_KEY=your-constant-contact-key-here
 
-# Option 2: Constant Contact (uncomment if using)
-# CONSTANT_CONTACT_API_KEY=your-constant-contact-key-here
-# CONSTANT_CONTACT_ACCESS_TOKEN=your-access-token-here
+# Alternative: SendGrid (optional)
+# SENDGRID_API_KEY=SG.your-sendgrid-api-key-here
 
 # =============================================================================
-# OPTIONAL: ADDITIONAL ENRICHMENT SERVICES
+# OPTIONAL: CONTACT ENRICHMENT SERVICES
 # =============================================================================
 
-# Apollo.io for email enrichment (optional)
+# People Data Labs for contact enrichment (optional)
+# Only needed if OpenVC data lacks email/LinkedIn info
+# PEOPLE_DATA_LABS_API_KEY=your-people-data-labs-api-key-here
+
+# Apollo.io for email verification (optional)
 # APOLLO_API_KEY=your-apollo-api-key-here
-
-# Clearbit for company data (optional)
-# CLEARBIT_API_KEY=your-clearbit-api-key-here
 
 # =============================================================================
 # CRON JOB SECURITY
@@ -170,14 +170,14 @@ node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
 
 ---
 
-### 3. Crunchbase API
+### 3. OpenVC API
 
-1. Visit [data.crunchbase.com](https://data.crunchbase.com/)
-2. Sign up for an Enterprise plan (required for API access)
-3. Go to Account → API Key
-4. Copy your API key
+1. Visit [openvc.app](https://www.openvc.app/)
+2. Sign up for an account or API access
+3. Contact OpenVC for API credentials or CSV export access
+4. Copy your API key (if using API)
 
-**Note**: Enterprise plan required (~$999/month). Free tier does not include API access.
+**Note**: OpenVC pricing varies by plan (~$199-499/month). Check current pricing at openvc.app.
 
 ---
 
@@ -193,7 +193,25 @@ node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
 
 ---
 
-### 5. SendGrid
+### 5. Constant Contact (Primary Email Service)
+
+1. Create account at [constantcontact.com](https://www.constantcontact.com/)
+2. Go to Account → Integrations → API Keys
+3. Generate API key
+4. Copy the API key
+
+**Required Setup:**
+
+- Verify sender email
+- Set up contact lists
+- Configure email templates
+- Enable email tracking
+
+**Recommended Plan**: Core ($20/month)
+
+---
+
+### 6. SendGrid (Alternative Email Service)
 
 1. Create account at [sendgrid.com](https://sendgrid.com/)
 2. Go to Settings → API Keys
@@ -211,38 +229,28 @@ node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
 
 ---
 
-### 6. Constant Contact (Alternative to SendGrid)
+### 7. People Data Labs (Optional - Contact Enrichment)
 
-1. Create account at [constantcontact.com](https://www.constantcontact.com/)
-2. Go to Account → Integrations → API Keys
-3. Generate API key and access token
-4. Copy both values
+1. Create account at [peopledatalabs.com](https://www.peopledatalabs.com/)
+2. Go to Dashboard → API Keys
+3. Generate API key
+4. Copy your API key
 
-**Required Setup:**
+**Use Case**: Fill in missing email/LinkedIn data from OpenVC
 
-- Verify sender email
-- Set up contact lists
-- Configure email templates
+**Cost**: Pay-as-you-go, ~$0.10-0.50 per enrichment
 
 ---
 
-### 7. Apollo.io (Optional)
+### 8. Apollo.io (Optional - Email Verification)
 
 1. Create account at [apollo.io](https://www.apollo.io/)
 2. Go to Settings → Integrations → API
 3. Copy your API key
 
-**Use Case**: Email enrichment for prospects missing contact info
+**Use Case**: Verify email deliverability and find alternative contacts
 
----
-
-### 8. Clearbit (Optional)
-
-1. Create account at [clearbit.com](https://clearbit.com/)
-2. Go to API → Keys
-3. Copy your API key
-
-**Use Case**: Additional company data enrichment
+**Cost**: Varies by plan
 
 ---
 
@@ -303,8 +311,8 @@ npm install
 # Test MongoDB connection
 node -e "require('./src/lib/mongodb').connectToDatabase().then(() => console.log('✅ MongoDB connected')).catch(e => console.error('❌ MongoDB failed:', e.message))"
 
-# Test Crunchbase API
-node scripts/test-crunchbase.js
+# Test OpenVC API
+node scripts/test-openvc.js
 
 # Test OpenAI API
 node scripts/test-openai.js
@@ -351,19 +359,26 @@ If all tests pass, you're ready to go! 🎉
 
 ---
 
-### Crunchbase API Errors
+### OpenVC API Errors
 
 **Error**: `401 Unauthorized`
 
 - Verify API key is correct
 - Check if API key has been revoked
-- Ensure Enterprise subscription is active
+- Ensure subscription is active
 
 **Error**: `429 Too Many Requests`
 
-- Rate limit exceeded (200 req/min)
+- Rate limit exceeded
 - Implement exponential backoff
 - Check for infinite loops in cron job
+- Contact OpenVC about rate limits
+
+**Error**: `Invalid CSV format`
+
+- Verify CSV structure matches expected format
+- Check for encoding issues (use UTF-8)
+- Validate required columns are present
 
 ---
 
@@ -443,5 +458,5 @@ LOG_LEVEL=error
 
 ---
 
-**Last Updated**: October 25, 2025  
-**Document Version**: 1.0
+**Last Updated**: October 27, 2025  
+**Document Version**: 1.1
