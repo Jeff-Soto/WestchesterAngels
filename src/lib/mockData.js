@@ -10,7 +10,8 @@ const realInvestors = [
     stages: ['Seed', 'Series A'],
     sectors: ['Consumer', 'Marketplaces', 'Media'],
     email: 'joanne@gothamgal.com',
-    linkedin: 'linkedin.com/in/joannewilson',
+    linkedin: 'linkedin.com/in/joanne-wilson-b0886110',
+    website: 'https://gothamgal.com/about-gothamgal/',
   },
   {
     name: 'Brian Cohen',
@@ -20,7 +21,8 @@ const realInvestors = [
     stages: ['Seed'],
     sectors: ['Consumer', 'Media', 'Platforms'],
     email: 'brian@newyorkangels.com',
-    linkedin: 'linkedin.com/in/briancohen',
+    linkedin: 'linkedin.com/in/brianscohen',
+    website: 'https://www.newyorkangels.com/members/brian-cohen',
   },
   {
     name: 'David S. Rose',
@@ -29,8 +31,9 @@ const realInvestors = [
     location: { city: 'New York', state: 'NY' },
     stages: ['Seed', 'Series A'],
     sectors: ['FinTech', 'PropTech', 'Enterprise Software'],
-    email: 'david@rosetech.com',
+    email: 'david@gust.com',
     linkedin: 'linkedin.com/in/davidsrose',
+    website: 'https://davidsrose.com',
   },
   {
     name: 'Fabrice Grinda',
@@ -50,7 +53,8 @@ const realInvestors = [
     stages: ['Pre-Seed', 'Seed'],
     sectors: ['Consumer', 'SaaS', 'FinTech'],
     email: 'david@boxgroup.com',
-    linkedin: 'linkedin.com/in/davidtisch',
+    linkedin: 'linkedin.com/in/davetisch',
+    website: 'https://www.boxgroup.com/team',
   },
   {
     name: 'Alex Iskold',
@@ -60,7 +64,8 @@ const realInvestors = [
     stages: ['Pre-Seed', 'Seed'],
     sectors: ['B2B SaaS', 'Developer Tools', 'FinTech'],
     email: 'alex@2048.vc',
-    linkedin: 'linkedin.com/in/alexiskold',
+    linkedin: 'linkedin.com/in/iskold',
+    website: 'https://www.2048.vc/team',
   },
   {
     name: 'Jenny Fielding',
@@ -71,16 +76,8 @@ const realInvestors = [
     sectors: ['FinTech', 'SaaS', 'HealthTech', 'Consumer'],
     email: 'jenny@everywhere.vc',
     linkedin: 'linkedin.com/in/jennyfielding',
-  },
-  {
-    name: 'Gary Vaynerchuk',
-    org: 'VaynerX',
-    bio: 'Early investor in Facebook/Twitter/Uber; media entrepreneur',
-    location: { city: 'New York', state: 'NY' },
-    stages: ['Seed', 'Series A'],
-    sectors: ['Consumer', 'Media', 'Web3'],
-    email: 'gary@vaynermedia.com',
-    linkedin: 'linkedin.com/in/garyvaynerchuk',
+    website: 'https://jennyfielding.com',
+    website2: 'https://everywhere.vc',
   },
   {
     name: 'Esther Dyson',
@@ -89,8 +86,9 @@ const realInvestors = [
     location: { city: 'New York', state: 'NY' },
     stages: ['Seed', 'Series A'],
     sectors: ['HealthTech', 'BioTech', 'GovTech'],
-    email: 'esther@wellville.net',
+    email: 'edyson@edventure.com',
     linkedin: 'linkedin.com/in/estherdyson',
+    website: 'https://wellville.net/about/team/',
   },
   {
     name: 'Fred Wilson',
@@ -101,6 +99,7 @@ const realInvestors = [
     sectors: ['Consumer Internet', 'Platforms', 'Crypto'],
     email: 'fred@usv.com',
     linkedin: 'linkedin.com/in/fredwilson',
+    website: 'https://www.usv.com/people/fred-wilson/',
   },
   {
     name: 'Albert Wenger',
@@ -111,6 +110,7 @@ const realInvestors = [
     sectors: ['Enterprise Software', 'Marketplaces'],
     email: 'albert@usv.com',
     linkedin: 'linkedin.com/in/albertwenger',
+    website: 'https://www.usv.com/people/albert-wenger/',
   },
   {
     name: 'Ben Lerer',
@@ -121,6 +121,7 @@ const realInvestors = [
     sectors: ['Consumer', 'Media', 'E-commerce'],
     email: 'ben@lererhippeau.com',
     linkedin: 'linkedin.com/in/benlerer',
+    website: 'https://www.lererhippeau.com/',
   },
   {
     name: 'Kevin Ryan',
@@ -130,7 +131,7 @@ const realInvestors = [
     stages: ['Pre-Seed', 'Seed'],
     sectors: ['Consumer', 'FinTech', 'HealthTech'],
     email: 'kevin@alleycorp.com',
-    linkedin: 'linkedin.com/in/kevinpryan',
+    linkedin: 'linkedin.com/in/kevinryan3',
   },
   {
     name: 'Nihal Mehta',
@@ -141,6 +142,7 @@ const realInvestors = [
     sectors: ['Mobile', 'FinTech', 'Consumer', 'AI/ML'],
     email: 'nihal@eniac.vc',
     linkedin: 'linkedin.com/in/nihalmehta',
+    website: 'https://www.eniac.vc/',
   },
   {
     name: 'John Borthwick',
@@ -150,7 +152,8 @@ const realInvestors = [
     stages: ['Pre-Seed', 'Seed'],
     sectors: ['Consumer', 'Media', 'AI/ML'],
     email: 'john@betaworks.com',
-    linkedin: 'linkedin.com/in/borthwick',
+    linkedin: 'linkedin.com/in/jborthwick',
+    website: 'https://www.betaworks.com/team',
   },
   {
     name: 'Bradley Tusk',
@@ -159,8 +162,11 @@ const realInvestors = [
     location: { city: 'New York', state: 'NY' },
     stages: ['Seed', 'Series A'],
     sectors: ['GovTech', 'Mobility', 'FinTech', 'HealthTech'],
-    email: 'bradley@tuskventures.com',
-    linkedin: 'linkedin.com/in/bradleytusk',
+    email: 'btusk@tuskholdings.com',
+    email2: 'info@tuskholdings.com',
+    linkedin: 'linkedin.com/in/btusk',
+    website: 'https://www.bradleytusk.com/',
+    website2: 'https://tuskstrategies.com/people/bradley-tusk/',
   },
   {
     name: 'Steve Schlafman',
@@ -171,6 +177,9 @@ const realInvestors = [
     sectors: ['B2B SaaS', 'Productivity', 'Future of Work'],
     email: 'steve@highoutput.co',
     linkedin: 'linkedin.com/in/schlaf',
+    website: 'https://www.primary.vc/',
+    website2: 'https://www.steveschlafman.com/',
+    notes: 'Couldn\'t find much of him in terms of investing but his LinkedIn points to the primary.vc site',
   },
   {
     name: 'Dennis Crowley',
@@ -180,7 +189,8 @@ const realInvestors = [
     stages: ['Seed'],
     sectors: ['Consumer', 'Local', 'Sports'],
     email: 'dennis@dcrowley.com',
-    linkedin: 'linkedin.com/in/denniscrowley',
+    linkedin: 'linkedin.com/in/dpstyles',
+    website: 'https://denniscrowley.com/',
   },
   {
     name: 'Scott Belsky',
@@ -189,8 +199,9 @@ const realInvestors = [
     location: { city: 'New York', state: 'NY' },
     stages: ['Seed', 'Series A'],
     sectors: ['Design Tools', 'Creator Economy', 'SaaS'],
-    email: 'scott@behance.com',
+    email: 'scott@belsky.com',
     linkedin: 'linkedin.com/in/scottbelsky',
+    website: 'https://scottbelsky.com',
   },
   {
     name: 'Howard Morgan',
@@ -200,7 +211,10 @@ const realInvestors = [
     stages: ['Seed', 'Series A'],
     sectors: ['Enterprise Software', 'Marketplaces'],
     email: 'howard@bcapital.com',
-    linkedin: 'linkedin.com/in/howardmorgan',
+    linkedin: 'linkedin.com/in/hlmorgan',
+    website: 'https://ausum.com',
+    website2: 'https://idealab.com',
+    website3: 'https://firstround.com',
   },
   {
     name: 'Ed Zimmerman',
@@ -209,8 +223,10 @@ const realInvestors = [
     location: { city: 'New York', state: 'NY' },
     stages: ['Seed', 'Series A'],
     sectors: ['Consumer', 'FinTech', 'SaaS'],
-    email: 'ed@lowenstein.com',
-    linkedin: 'linkedin.com/in/edzimmerman',
+    email: 'ezimmerman@lowenstein.com',
+    linkedin: 'linkedin.com/in/edgrapenutzimmerman',
+    website: 'https://www.lowenstein.com/people/attorneys/ed-zimmerman',
+    notes: 'He\'s an attorney for VC\'s by trade but also a co-founder of an investment group and has invested personally',
   },
   {
     name: 'Laurel Touby',
@@ -221,6 +237,7 @@ const realInvestors = [
     sectors: ['Enterprise SaaS', 'FinTech', 'DeepTech'],
     email: 'laurel@supernode.vc',
     linkedin: 'linkedin.com/in/laureltouby',
+    website: 'https://supernode.vc',
   },
   {
     name: 'Peter Boyce II',
@@ -230,7 +247,8 @@ const realInvestors = [
     stages: ['Pre-Seed', 'Seed'],
     sectors: ['Consumer', 'SaaS'],
     email: 'peter@stellation.co',
-    linkedin: 'linkedin.com/in/peterboyce',
+    linkedin: 'linkedin.com/in/peterboyce2',
+    website: 'https://boyce2.com/bio',
   },
   {
     name: 'Josh Wolfe',
@@ -240,7 +258,8 @@ const realInvestors = [
     stages: ['Seed', 'Series A'],
     sectors: ['DeepTech', 'Defense', 'BioTech', 'AI/ML'],
     email: 'josh@luxcapital.com',
-    linkedin: 'linkedin.com/in/joshwolfe',
+    linkedin: 'linkedin.com/in/josh-wolfe-7883',
+    website: 'https://www.luxcapital.com/people/josh-wolfe',
   },
   {
     name: 'Alexa von Tobel',
@@ -251,6 +270,7 @@ const realInvestors = [
     sectors: ['FinTech', 'Consumer', 'SaaS'],
     email: 'alexa@inspired.com',
     linkedin: 'linkedin.com/in/alexavontobel',
+    website: 'https://linktr.ee/alexavontobel',
   },
   {
     name: 'Charlie O\'Donnell',
@@ -260,7 +280,11 @@ const realInvestors = [
     stages: ['Pre-Seed', 'Seed'],
     sectors: ['SaaS', 'Marketplaces', 'FinTech'],
     email: 'charlie@brooklynbridge.vc',
-    linkedin: 'linkedin.com/in/charlieodonnell',
+    linkedin: 'linkedin.com/in/ceonyc',
+    website: 'https://brooklynbridge.vc/team',
+    website2: 'https://thisisgoingtobebig.com',
+    website3: 'https://vcsheet.com/who/charlie-o-donnell',
+    notes: 'His linkedin states he is no longer investing into startups',
   },
   {
     name: 'Annie Kadavy',
@@ -271,6 +295,8 @@ const realInvestors = [
     sectors: ['B2B SaaS', 'Future of Work', 'Marketplaces'],
     email: 'annie@kadavy.com',
     linkedin: 'linkedin.com/in/anniekadavy',
+    website: 'https://www.redpoint.com/our-people/annie-kadavy/',
+    notes: 'Based in San Francisco but has invested into NYC based startups',
   },
   {
     name: 'Basil Moftah',
@@ -279,8 +305,10 @@ const realInvestors = [
     location: { city: 'New York', state: 'NY' },
     stages: ['Seed', 'Series A'],
     sectors: ['Media', 'B2B SaaS', 'Data'],
-    email: 'basil@moftah.com',
+    email: 'info@key.capital',
     linkedin: 'linkedin.com/in/basilmoftah',
+    website: 'https://key.capital/',
+    notes: 'Based in Dubai but has invested in NYC companies',
   },
   {
     name: 'Mark Peter Davis',
@@ -291,6 +319,7 @@ const realInvestors = [
     sectors: ['B2B SaaS', 'Marketplaces', 'FinTech', 'HealthTech'],
     email: 'mark@interplay.vc',
     linkedin: 'linkedin.com/in/markpeterdavis',
+    website: 'http://interplay.vc/',
   },
   {
     name: 'Jenny Abramson',
@@ -300,17 +329,10 @@ const realInvestors = [
     stages: ['Seed', 'Series A'],
     sectors: ['Future of Work', 'HealthTech', 'EdTech', 'Impact'],
     email: 'jenny@rethinkimpact.com',
-    linkedin: 'linkedin.com/in/jennyabramson',
+    linkedin: 'linkedin.com/in/jenny-abramson-bb75297',
+    website: 'https://rethinkimpact.com/jennyabramson/',
   },
   // NJ/PA Regional Angels
-  {
-    name: 'Howard Lubert',
-    org: 'Keiretsu Forum Mid-Atlantic',
-    bio: 'Founding partner of Keiretsu Forum Mid-Atlantic; long-time Philly-area angel',
-    location: { city: 'Philadelphia', state: 'PA' },
-    stages: ['Seed', 'Early'],
-    sectors: ['B2B', 'life sciences', 'med devices', 'IT'],
-  },
   {
     name: 'Ellen Weber',
     org: 'Robin Hood Ventures / Temple IE',
@@ -318,6 +340,8 @@ const realInvestors = [
     location: { city: 'Philadelphia', state: 'PA' },
     stages: ['Seed', 'Early'],
     sectors: ['Health', 'B2B SaaS', 'edtech', 'impact'],
+    linkedin: 'linkedin.com/in/elleneweber',
+    website: 'https://www.robinhoodventures.com/',
   },
   {
     name: 'Brett Topche',
@@ -326,6 +350,8 @@ const realInvestors = [
     location: { city: 'Philadelphia', state: 'PA' },
     stages: ['Seed', 'Series A (early)'],
     sectors: ['B2B', 'digital health', 'university spinouts'],
+    linkedin: 'linkedin.com/in/bretttopche',
+    website: 'https://www.redandblue.vc/team',
   },
   {
     name: 'Wayne Kimmel',
@@ -334,30 +360,8 @@ const realInvestors = [
     location: { city: 'Conshohocken', state: 'PA' },
     stages: ['Seed', 'Early'],
     sectors: ['Sports tech', 'media', 'retail/consumer', 'gaming'],
-  },
-  {
-    name: 'Gary Biehn',
-    org: 'Independent investor (Philly ecosystem)',
-    bio: 'Active in Philly angel/venture circles; mentor-investor in early-stage companies',
-    location: { city: 'Philadelphia', state: 'PA' },
-    stages: ['Seed', 'Early'],
-    sectors: ['B2B', 'services', 'healthcare'],
-  },
-  {
-    name: 'Anthony Maher',
-    org: 'Independent investor/operator',
-    bio: 'Philly tech/sports/community investor; built 1776/Rec Philly ecosystem ties; invests in local founders',
-    location: { city: 'Philadelphia', state: 'PA' },
-    stages: ['Pre-seed', 'Seed'],
-    sectors: ['Sports', 'media', 'community', 'SaaS'],
-  },
-  {
-    name: 'Ira Lubert',
-    org: 'Lubert family / regional venture',
-    bio: 'Prominent PA investor/operator; co-invests via regional networks; long-term angel family',
-    location: { city: 'Philadelphia', state: 'PA' },
-    stages: ['Early', 'Growth (selective)'],
-    sectors: ['Real estate tech', 'services', 'finance'],
+    linkedin: 'linkedin.com/in/waynekimmel',
+    website: 'https://www.seventysixcapital.com/wayne-kimmel',
   },
   {
     name: 'Stephen Socolof',
@@ -366,6 +370,10 @@ const realInvestors = [
     location: { city: 'Princeton', state: 'NJ' },
     stages: ['Seed', 'Early'],
     sectors: ['Enterprise', 'deep tech', 'life sciences'],
+    email: 'steve@techcouncilventures.com',
+    phone: '+1 856-273-6800',
+    linkedin: 'linkedin.com/in/stephen-socolof-b5125840',
+    website: 'https://techcouncilventures.com/team-members/steve-socolof/',
   },
   {
     name: 'Mario Casabona',
@@ -374,14 +382,9 @@ const realInvestors = [
     location: { city: 'Montville', state: 'NJ' },
     stages: ['Pre-seed', 'Seed'],
     sectors: ['IoT', 'enterprise', 'cleantech', 'AI'],
-  },
-  {
-    name: 'Clifford F. Clapp',
-    org: 'NJ/PA angel networks (public-facing)',
-    bio: 'NJ/PA regional angel active through Princeton/NJ tech circles and Mid-Atlantic networks',
-    location: { city: 'Central New Jersey', state: 'NJ' },
-    stages: ['Seed', 'Early'],
-    sectors: ['B2B', 'SaaS', 'healthcare'],
+    email: 'info@casabonaventures.com',
+    linkedin: 'linkedin.com/in/mariocasabona',
+    website: 'https://casabonaventures.com/investor-profile/',
   },
 ]
 
@@ -470,20 +473,33 @@ export function generateMockProspects() {
     const firstName = nameParts[0]
     const lastName = nameParts.slice(1).join(' ')
     
-    // Generate phone number with appropriate area codes
-    let areaCode = '201' // default
-    if (location.state === 'NY') {
-      areaCode = ['212', '646', '917'][Math.floor(Math.random() * 3)]
-    } else if (location.state === 'PA') {
-      areaCode = ['215', '267', '610'][Math.floor(Math.random() * 3)] // Philly area codes
-    } else if (location.state === 'NJ') {
-      areaCode = ['201', '609', '732', '973'][Math.floor(Math.random() * 4)] // NJ area codes
+    // Use provided phone or generate one
+    let phone = investor.phone
+    if (!phone) {
+      let areaCode = '201' // default
+      if (location.state === 'NY') {
+        areaCode = ['212', '646', '917'][Math.floor(Math.random() * 3)]
+      } else if (location.state === 'PA') {
+        areaCode = ['215', '267', '610'][Math.floor(Math.random() * 3)] // Philly area codes
+      } else if (location.state === 'NJ') {
+        areaCode = ['201', '609', '732', '973'][Math.floor(Math.random() * 4)] // NJ area codes
+      }
+      phone = `(${areaCode}) ${Math.floor(Math.random() * 900) + 100}-${Math.floor(Math.random() * 9000) + 1000}`
     }
-    const phone = `(${areaCode}) ${Math.floor(Math.random() * 900) + 100}-${Math.floor(Math.random() * 9000) + 1000}`
     
-    // Generate website
-    const orgSlug = investor.org.toLowerCase().replace(/[^a-z0-9]+/g, '')
-    const website = `https://www.${orgSlug}.com`
+    // Use provided website or generate one
+    let website = investor.website
+    if (!website) {
+      const orgSlug = investor.org.toLowerCase().replace(/[^a-z0-9]+/g, '')
+      website = `https://www.${orgSlug}.com`
+    }
+    
+    // Use provided email or generate one
+    let email = investor.email
+    if (!email) {
+      const orgSlug = investor.org.toLowerCase().replace(/[^a-z0-9]+/g, '')
+      email = `contact@${orgSlug}.com`
+    }
     
     return {
       id: index + 1,
@@ -497,14 +513,14 @@ export function generateMockProspects() {
       checkSize,
       fitScore,
       whySummary: investor.bio,
-      email: investor.email,
-      linkedin: investor.linkedin, // Modal will add https:// protocol
+      email,
+      linkedin: investor.linkedin || '',
       website,
       phone,
       status,
       portfolio,
       tags: [],
-      notes: '',
+      notes: investor.notes || '',
       createdAt: new Date(Date.now() - Math.random() * 90 * 24 * 60 * 60 * 1000).toISOString(),
       updatedAt: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString(),
       lastEnrichedAt: new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000).toISOString(),
