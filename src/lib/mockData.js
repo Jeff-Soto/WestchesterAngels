@@ -1,6 +1,6 @@
 // Mock data using REAL tri-state angel investors
 
-// Real investor data sourced from NYC angel ecosystem
+// Real investor data sourced from NYC, NJ, and PA angel ecosystems
 const realInvestors = [
   {
     name: 'Joanne Wilson',
@@ -302,6 +302,87 @@ const realInvestors = [
     email: 'jenny@rethinkimpact.com',
     linkedin: 'linkedin.com/in/jennyabramson',
   },
+  // NJ/PA Regional Angels
+  {
+    name: 'Howard Lubert',
+    org: 'Keiretsu Forum Mid-Atlantic',
+    bio: 'Founding partner of Keiretsu Forum Mid-Atlantic; long-time Philly-area angel',
+    location: { city: 'Philadelphia', state: 'PA' },
+    stages: ['Seed', 'Early'],
+    sectors: ['B2B', 'life sciences', 'med devices', 'IT'],
+  },
+  {
+    name: 'Ellen Weber',
+    org: 'Robin Hood Ventures / Temple IE',
+    bio: 'Philadelphia investor/operator; led Robin Hood Ventures; deep in startup/angel ecosystem',
+    location: { city: 'Philadelphia', state: 'PA' },
+    stages: ['Seed', 'Early'],
+    sectors: ['Health', 'B2B SaaS', 'edtech', 'impact'],
+  },
+  {
+    name: 'Brett Topche',
+    org: 'Red & Blue Ventures',
+    bio: 'Co-founder at Red & Blue Ventures; invests in early-stage Penn-affiliated founders',
+    location: { city: 'Philadelphia', state: 'PA' },
+    stages: ['Seed', 'Series A (early)'],
+    sectors: ['B2B', 'digital health', 'university spinouts'],
+  },
+  {
+    name: 'Wayne Kimmel',
+    org: 'SeventySix Capital',
+    bio: 'Philly-area investor; sports/consumer/tech focus; founder of SeventySix Capital',
+    location: { city: 'Conshohocken', state: 'PA' },
+    stages: ['Seed', 'Early'],
+    sectors: ['Sports tech', 'media', 'retail/consumer', 'gaming'],
+  },
+  {
+    name: 'Gary Biehn',
+    org: 'Independent investor (Philly ecosystem)',
+    bio: 'Active in Philly angel/venture circles; mentor-investor in early-stage companies',
+    location: { city: 'Philadelphia', state: 'PA' },
+    stages: ['Seed', 'Early'],
+    sectors: ['B2B', 'services', 'healthcare'],
+  },
+  {
+    name: 'Anthony Maher',
+    org: 'Independent investor/operator',
+    bio: 'Philly tech/sports/community investor; built 1776/Rec Philly ecosystem ties; invests in local founders',
+    location: { city: 'Philadelphia', state: 'PA' },
+    stages: ['Pre-seed', 'Seed'],
+    sectors: ['Sports', 'media', 'community', 'SaaS'],
+  },
+  {
+    name: 'Ira Lubert',
+    org: 'Lubert family / regional venture',
+    bio: 'Prominent PA investor/operator; co-invests via regional networks; long-term angel family',
+    location: { city: 'Philadelphia', state: 'PA' },
+    stages: ['Early', 'Growth (selective)'],
+    sectors: ['Real estate tech', 'services', 'finance'],
+  },
+  {
+    name: 'Stephen Socolof',
+    org: 'Tech Council Ventures (GP)',
+    bio: 'NJ-based early-stage/tech investor; associated with Tech Council Ventures / NJ tech ecosystem',
+    location: { city: 'Princeton', state: 'NJ' },
+    stages: ['Seed', 'Early'],
+    sectors: ['Enterprise', 'deep tech', 'life sciences'],
+  },
+  {
+    name: 'Mario Casabona',
+    org: 'Casabona Ventures / TechLaunch NJ',
+    bio: 'NJ angel; founder of Casabona Ventures; runs TechLaunch NJ; very public about NJ startups',
+    location: { city: 'Montville', state: 'NJ' },
+    stages: ['Pre-seed', 'Seed'],
+    sectors: ['IoT', 'enterprise', 'cleantech', 'AI'],
+  },
+  {
+    name: 'Clifford F. Clapp',
+    org: 'NJ/PA angel networks (public-facing)',
+    bio: 'NJ/PA regional angel active through Princeton/NJ tech circles and Mid-Atlantic networks',
+    location: { city: 'Central New Jersey', state: 'NJ' },
+    stages: ['Seed', 'Early'],
+    sectors: ['B2B', 'SaaS', 'healthcare'],
+  },
 ]
 
 const statuses = ['new', 'contacted', 'interested', 'meeting_scheduled', 'passed']
@@ -346,6 +427,17 @@ function generatePortfolio(sectors) {
     'E-commerce': ['Shopify', 'Instacart', 'DoorDash', 'Faire', 'Squarespace'],
     'Media': ['BuzzFeed', 'Vox', 'Vice', 'Complex', 'Axios', 'The Verge'],
     'AI/ML': ['Hugging Face', 'Scale AI', 'Dataiku', 'Weights & Biases', 'Anthropic'],
+    'Sports Tech': ['Fanatics', 'DraftKings', 'FanDuel', 'WHOOP', 'Overtime', 'Sorare', 'OpenSponsorship'],
+    'Med Devices': ['Butterfly Network', 'Nanox', 'Arterys', 'Viz.ai', 'iRhythm', 'Outset Medical'],
+    'IoT': ['Samsara', 'Particle', 'Blues Wireless', 'Very', 'Helium', 'Electric Imp'],
+    'CleanTech': ['Sunrun', 'Sunnova', 'Enphase Energy', 'ChargePoint', 'Lucid Motors', 'Rivian'],
+    'DeepTech': ['Planet Labs', 'SpaceX', 'Anduril', 'Relativity Space', 'Zipline', 'Desktop Metal'],
+    'Gaming': ['Roblox', 'Discord', 'Unity', 'Epic Games', 'Niantic', 'Scopely'],
+    'PropTech': ['Opendoor', 'Compass', 'Zillow', 'Redfin', 'VTS', 'Houzz'],
+    'BioTech': ['Ginkgo Bioworks', 'Recursion', '23andMe', 'Tempus', 'Grail', 'Freenome'],
+    'GovTech': ['Nava', 'CityBlock', 'Mark43', 'Civic Tech', 'OpenGov', 'Citymart'],
+    'Impact': ['Better.com', 'Rent the Runway', 'Givz', 'Aspiration', 'Carbon Collective'],
+    'Community': ['Meetup', 'Nextdoor', 'Peanut', 'The Sill', 'Geneva', 'Circle'],
   }
   
   const allCompanies = []
@@ -378,8 +470,15 @@ export function generateMockProspects() {
     const firstName = nameParts[0]
     const lastName = nameParts.slice(1).join(' ')
     
-    // Generate phone number
-    const areaCode = location.state === 'NY' ? ['212', '646', '917'][Math.floor(Math.random() * 3)] : '201'
+    // Generate phone number with appropriate area codes
+    let areaCode = '201' // default
+    if (location.state === 'NY') {
+      areaCode = ['212', '646', '917'][Math.floor(Math.random() * 3)]
+    } else if (location.state === 'PA') {
+      areaCode = ['215', '267', '610'][Math.floor(Math.random() * 3)] // Philly area codes
+    } else if (location.state === 'NJ') {
+      areaCode = ['201', '609', '732', '973'][Math.floor(Math.random() * 4)] // NJ area codes
+    }
     const phone = `(${areaCode}) ${Math.floor(Math.random() * 900) + 100}-${Math.floor(Math.random() * 9000) + 1000}`
     
     // Generate website
