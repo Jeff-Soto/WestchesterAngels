@@ -30,7 +30,8 @@ import {
   Phone as PhoneIcon,
   CalendarToday as CalendarIcon,
   TrendingUp as TrendingUpIcon,
-  Business as BusinessIcon
+  Business as BusinessIcon,
+  InfoOutlined as InfoIcon
 } from '@mui/icons-material'
 import { statusLabels } from '@/lib/mockData'
 
@@ -317,6 +318,34 @@ export default function ProspectDetailModal({ prospect, open, onClose, onStatusU
             </ListItem>
           </List>
         </Box>
+
+        {/* Notes Section - Only show if notes exist */}
+        {prospect.notes && (
+          <>
+            <Divider sx={{ my: 3 }} />
+            <Box>
+              <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 2 }}>
+                <InfoIcon color="info" />
+                <Typography variant="h6">
+                  Notes
+                </Typography>
+              </Stack>
+              <Paper 
+                variant="outlined" 
+                sx={{ 
+                  p: 2, 
+                  bgcolor: 'info.lighter',
+                  borderColor: 'info.main',
+                  borderWidth: 1
+                }}
+              >
+                <Typography variant="body2" color="text.secondary">
+                  {prospect.notes}
+                </Typography>
+              </Paper>
+            </Box>
+          </>
+        )}
       </DialogContent>
 
       <DialogActions sx={{ p: 2, flexDirection: { xs: 'column-reverse', sm: 'row' }, gap: 1 }}>
