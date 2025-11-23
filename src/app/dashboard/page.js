@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo, useEffect, useCallback } from 'react'
 import { 
   Container, 
   Typography, 
@@ -21,7 +21,9 @@ import {
   Slider,
   Paper,
   Collapse,
-  IconButton
+  IconButton,
+  Snackbar,
+  Alert as MuiAlert
 } from '@mui/material'
 import {
   Dashboard as DashboardIcon,
@@ -35,15 +37,17 @@ import {
   ExpandLess as ExpandLessIcon,
   BarChart as BarChartIcon
 } from '@mui/icons-material'
-import { generateMockProspects, calculateStats, getFilterOptions, statusLabels } from '@/lib/mockData'
+import { getFilterOptions, statusLabels, calculateStats } from '@/lib/mockData'
 import ProspectTable from './components/ProspectTable'
 import StatsCards from './components/StatsCards'
 import ProspectDetailModal from './components/ProspectDetailModal'
 import ChartsSection from './components/ChartsSection'
 
 export default function DashboardPage() {
-  // Generate mock data (client-side only to avoid hydration errors)
   const [allProspects, setAllProspects] = useState([])
+  const [stats, setStats] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedSectors, setSelectedSectors] = useState([])
   const [selectedStates, setSelectedStates] = useState([])
@@ -52,59 +56,137 @@ export default function DashboardPage() {
   const [selectedProspect, setSelectedProspect] = useState(null)
   const [detailModalOpen, setDetailModalOpen] = useState(false)
   const [analyticsExpanded, setAnalyticsExpanded] = useState(false)
+  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' })
 
-  // Generate data on client mount to avoid hydration mismatch
-  // Using real tri-state angel investors (30 prospects)
-  useEffect(() => {
-    setAllProspects(generateMockProspects())
+  // Helper function to apply all filters
+  const applyFilters = useCallback((prospects, filters) => {
+    let filtered = [...prospects]
+
+    // Search filter with improved name matching
+    if (filters.searchTerm) {
+      const search = filters.searchTerm.toLowerCase().trim()
+      const searchWords = search.split(/\s+/)
+      
+      filtered = filtered.filter(prospect => {
+        const nameLower = prospect.name.toLowerCase()
+        const orgLower = prospect.org.toLowerCase()
+        const emailLower = prospect.email.toLowerCase()
+        
+        // Check if all search words match anywhere in name, org, or email
+        const matchesSearch = searchWords.every(word => 
+          nameLower.includes(word) || 
+          orgLower.includes(word) || 
+          emailLower.includes(word)
+        )
+        
+        return matchesSearch
+      })
+    }
+
+    // Sector filter
+    if (filters.selectedSectors.length > 0) {
+      filtered = filtered.filter(p => 
+        p.sectors.some(s => filters.selectedSectors.includes(s))
+      )
+    }
+
+    // State filter
+    if (filters.selectedStates.length > 0) {
+      filtered = filtered.filter(p => 
+        filters.selectedStates.includes(p.location.state)
+      )
+    }
+
+    // Status filter
+    if (filters.selectedStatuses.length > 0) {
+      filtered = filtered.filter(p => 
+        filters.selectedStatuses.includes(p.status)
+      )
+    }
+
+    // Score range filter
+    filtered = filtered.filter(p => 
+      p.fitScore >= filters.scoreRange[0] && p.fitScore <= filters.scoreRange[1]
+    )
+
+    return filtered
   }, [])
+
+  // Fetch all prospects once on mount (no filtering)
+  useEffect(() => {
+    const fetchProspects = async () => {
+      try {
+        setLoading(true)
+        setError(null)
+        
+        const response = await fetch('/api/prospects')
+        if (!response.ok) {
+          throw new Error('Failed to fetch prospects')
+        }
+        
+        const result = await response.json()
+        if (result.success) {
+          setAllProspects(result.data)
+        } else {
+          throw new Error(result.error || 'Failed to fetch prospects')
+        }
+      } catch (err) {
+        console.error('Error fetching prospects:', err)
+        setError(err.message)
+        setAllProspects([])
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchProspects()
+  }, []) // Only fetch once on mount
+
+  // Calculate stats from filtered prospects (client-side)
+  useEffect(() => {
+    if (allProspects.length === 0) {
+      setStats(null)
+      return
+    }
+
+    // Apply all filters to calculate stats
+    const filtered = applyFilters(allProspects, {
+      searchTerm,
+      selectedSectors,
+      selectedStates,
+      selectedStatuses,
+      scoreRange
+    })
+
+    // Calculate stats from filtered prospects
+    const calculatedStats = calculateStats(filtered)
+    setStats(calculatedStats)
+  }, [allProspects, searchTerm, selectedSectors, selectedStates, selectedStatuses, scoreRange])
+
+  const showSnackbar = (message, severity = 'success') => {
+    setSnackbar({ open: true, message, severity })
+  }
+
+  const handleCloseSnackbar = () => {
+    setSnackbar({ ...snackbar, open: false })
+  }
 
   // Get filter options
   const filterOptions = useMemo(() => getFilterOptions(allProspects), [allProspects])
 
-  // Filter prospects
+  // Apply all filters client-side for smooth filtering
   const filteredProspects = useMemo(() => {
-    return allProspects.filter(prospect => {
-      // Search filter
-      if (searchTerm) {
-        const search = searchTerm.toLowerCase()
-        const matchesSearch = 
-          prospect.name.toLowerCase().includes(search) ||
-          prospect.org.toLowerCase().includes(search) ||
-          prospect.email.toLowerCase().includes(search)
-        if (!matchesSearch) return false
-      }
-
-      // Sector filter
-      if (selectedSectors.length > 0) {
-        const hasSector = prospect.sectors.some(s => selectedSectors.includes(s))
-        if (!hasSector) return false
-      }
-
-      // State filter
-      if (selectedStates.length > 0) {
-        if (!selectedStates.includes(prospect.location.state)) return false
-      }
-
-      // Status filter
-      if (selectedStatuses.length > 0) {
-        if (!selectedStatuses.includes(prospect.status)) return false
-      }
-
-      // Score range filter
-      if (prospect.fitScore < scoreRange[0] || prospect.fitScore > scoreRange[1]) {
-        return false
-      }
-
-      return true
+    return applyFilters(allProspects, {
+      searchTerm,
+      selectedSectors,
+      selectedStates,
+      selectedStatuses,
+      scoreRange
     })
   }, [allProspects, searchTerm, selectedSectors, selectedStates, selectedStatuses, scoreRange])
 
-  // Calculate stats
-  const stats = useMemo(() => calculateStats(filteredProspects), [filteredProspects])
-
-  // Show loading state while data is being generated
-  if (allProspects.length === 0) {
+  // Show loading state
+  if (loading) {
     return (
       <Container maxWidth="xl" sx={{ py: 4, textAlign: 'center' }}>
         <Box sx={{ py: 8 }}>
@@ -112,7 +194,23 @@ export default function DashboardPage() {
             Loading prospects...
           </Typography>
           <Typography variant="body2" color="text.secondary">
-            Generating mock data for demo
+            Fetching data from API
+          </Typography>
+        </Box>
+      </Container>
+    )
+  }
+
+  // Show error state
+  if (error) {
+    return (
+      <Container maxWidth="xl" sx={{ py: 4, textAlign: 'center' }}>
+        <Box sx={{ py: 8 }}>
+          <Typography variant="h5" gutterBottom color="error">
+            Error loading prospects
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            {error}
           </Typography>
         </Box>
       </Container>
@@ -127,8 +225,12 @@ export default function DashboardPage() {
 
   // Handle status update
   const handleStatusUpdate = (prospectId, newStatus) => {
-    // In real app, this would update the backend
-    console.log(`Update prospect ${prospectId} status to ${newStatus}`)
+    // Update local state (no DB, so just update component state)
+    setAllProspects(prevProspects => 
+      prevProspects.map(p => 
+        p.id === prospectId ? { ...p, status: newStatus } : p
+      )
+    )
   }
 
   // Clear filters
@@ -269,10 +371,10 @@ export default function DashboardPage() {
         <Collapse in={analyticsExpanded}>
           <Box sx={{ p: 3, pt: 2 }}>
             {/* Stats Cards */}
-            <StatsCards stats={stats} />
+            {stats && <StatsCards stats={stats} />}
             
             {/* Charts */}
-            <ChartsSection stats={stats} />
+            {stats && <ChartsSection stats={stats} />}
           </Box>
         </Collapse>
       </Paper>
@@ -320,24 +422,59 @@ export default function DashboardPage() {
                label="Sectors"
                variant="outlined"
                fullWidth
+               InputLabelProps={{
+                 shrink: true
+               }}
+               sx={{
+                 '& .MuiInputLabel-root': {
+                   color: selectedSectors.length === 0 ? 'rgba(0, 0, 0, 0.6)' : undefined,
+                   '&.Mui-focused': {
+                     color: selectedSectors.length === 0 ? 'rgba(0, 0, 0, 0.6)' : undefined
+                   }
+                 },
+                 '& .MuiOutlinedInput-root': {
+                   '& fieldset': {
+                     borderColor: selectedSectors.length === 0 ? 'rgba(0, 0, 0, 0.23)' : undefined
+                   },
+                   '&:hover fieldset': {
+                     borderColor: selectedSectors.length === 0 ? 'rgba(0, 0, 0, 0.23)' : undefined
+                   },
+                   '&.Mui-focused fieldset': {
+                     borderColor: selectedSectors.length === 0 ? 'rgba(0, 0, 0, 0.23)' : undefined
+                   }
+                 }
+               }}
+               InputProps={{
+                 sx: {
+                   '& .MuiSelect-select': {
+                     color: selectedSectors.length === 0 ? 'rgba(0, 0, 0, 0.6)' : 'inherit'
+                   }
+                 }
+               }}
                SelectProps={{
                  multiple: true,
-                 renderValue: (selected) => (
-                   <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                     {selected.map((value) => (
-                       <Chip 
-                         key={value} 
-                         label={value} 
-                         size="small"
-                         onDelete={(e) => {
-                           e.stopPropagation()
-                           setSelectedSectors(selectedSectors.filter(s => s !== value))
-                         }}
-                         onMouseDown={(e) => e.stopPropagation()}
-                       />
-                     ))}
-                   </Box>
-                 ),
+                 displayEmpty: true,
+                 renderValue: (selected) => {
+                   if (!selected || selected.length === 0) {
+                     return <em style={{ color: 'rgba(0, 0, 0, 0.6)', fontStyle: 'normal' }}>All sectors</em>
+                   }
+                   return (
+                     <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                       {selected.map((value) => (
+                         <Chip 
+                           key={value} 
+                           label={value} 
+                           size="small"
+                           onDelete={(e) => {
+                             e.stopPropagation()
+                             setSelectedSectors(selectedSectors.filter(s => s !== value))
+                           }}
+                           onMouseDown={(e) => e.stopPropagation()}
+                         />
+                       ))}
+                     </Box>
+                   )
+                 },
                }}
                value={selectedSectors}
                onChange={(e) => setSelectedSectors(e.target.value)}
@@ -357,24 +494,59 @@ export default function DashboardPage() {
                label="Location"
                variant="outlined"
                fullWidth
+               InputLabelProps={{
+                 shrink: true
+               }}
+               sx={{
+                 '& .MuiInputLabel-root': {
+                   color: selectedStates.length === 0 ? 'rgba(0, 0, 0, 0.6)' : undefined,
+                   '&.Mui-focused': {
+                     color: selectedStates.length === 0 ? 'rgba(0, 0, 0, 0.6)' : undefined
+                   }
+                 },
+                 '& .MuiOutlinedInput-root': {
+                   '& fieldset': {
+                     borderColor: selectedStates.length === 0 ? 'rgba(0, 0, 0, 0.23)' : undefined
+                   },
+                   '&:hover fieldset': {
+                     borderColor: selectedStates.length === 0 ? 'rgba(0, 0, 0, 0.23)' : undefined
+                   },
+                   '&.Mui-focused fieldset': {
+                     borderColor: selectedStates.length === 0 ? 'rgba(0, 0, 0, 0.23)' : undefined
+                   }
+                 }
+               }}
+               InputProps={{
+                 sx: {
+                   '& .MuiSelect-select': {
+                     color: selectedStates.length === 0 ? 'rgba(0, 0, 0, 0.6)' : 'inherit'
+                   }
+                 }
+               }}
                SelectProps={{
                  multiple: true,
-                 renderValue: (selected) => (
-                   <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                     {selected.map((value) => (
-                       <Chip 
-                         key={value} 
-                         label={value} 
-                         size="small"
-                         onDelete={(e) => {
-                           e.stopPropagation()
-                           setSelectedStates(selectedStates.filter(s => s !== value))
-                         }}
-                         onMouseDown={(e) => e.stopPropagation()}
-                       />
-                     ))}
-                   </Box>
-                 ),
+                 displayEmpty: true,
+                 renderValue: (selected) => {
+                   if (!selected || selected.length === 0) {
+                     return <em style={{ color: 'rgba(0, 0, 0, 0.6)', fontStyle: 'normal' }}>All locations</em>
+                   }
+                   return (
+                     <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                       {selected.map((value) => (
+                         <Chip 
+                           key={value} 
+                           label={value} 
+                           size="small"
+                           onDelete={(e) => {
+                             e.stopPropagation()
+                             setSelectedStates(selectedStates.filter(s => s !== value))
+                           }}
+                           onMouseDown={(e) => e.stopPropagation()}
+                         />
+                       ))}
+                     </Box>
+                   )
+                 },
                }}
                value={selectedStates}
                onChange={(e) => setSelectedStates(e.target.value)}
@@ -394,24 +566,59 @@ export default function DashboardPage() {
                label="Status"
                variant="outlined"
                fullWidth
+               InputLabelProps={{
+                 shrink: true
+               }}
+               sx={{
+                 '& .MuiInputLabel-root': {
+                   color: selectedStatuses.length === 0 ? 'rgba(0, 0, 0, 0.6)' : undefined,
+                   '&.Mui-focused': {
+                     color: selectedStatuses.length === 0 ? 'rgba(0, 0, 0, 0.6)' : undefined
+                   }
+                 },
+                 '& .MuiOutlinedInput-root': {
+                   '& fieldset': {
+                     borderColor: selectedStatuses.length === 0 ? 'rgba(0, 0, 0, 0.23)' : undefined
+                   },
+                   '&:hover fieldset': {
+                     borderColor: selectedStatuses.length === 0 ? 'rgba(0, 0, 0, 0.23)' : undefined
+                   },
+                   '&.Mui-focused fieldset': {
+                     borderColor: selectedStatuses.length === 0 ? 'rgba(0, 0, 0, 0.23)' : undefined
+                   }
+                 }
+               }}
+               InputProps={{
+                 sx: {
+                   '& .MuiSelect-select': {
+                     color: selectedStatuses.length === 0 ? 'rgba(0, 0, 0, 0.6)' : 'inherit'
+                   }
+                 }
+               }}
                SelectProps={{
                  multiple: true,
-                 renderValue: (selected) => (
-                   <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                     {selected.map((value) => (
-                       <Chip 
-                         key={value} 
-                         label={statusLabels[value]} 
-                         size="small"
-                         onDelete={(e) => {
-                           e.stopPropagation()
-                           setSelectedStatuses(selectedStatuses.filter(s => s !== value))
-                         }}
-                         onMouseDown={(e) => e.stopPropagation()}
-                       />
-                     ))}
-                   </Box>
-                 ),
+                 displayEmpty: true,
+                 renderValue: (selected) => {
+                   if (!selected || selected.length === 0) {
+                     return <em style={{ color: 'rgba(0, 0, 0, 0.6)', fontStyle: 'normal' }}>All statuses</em>
+                   }
+                   return (
+                     <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                       {selected.map((value) => (
+                         <Chip 
+                           key={value} 
+                           label={statusLabels[value]} 
+                           size="small"
+                           onDelete={(e) => {
+                             e.stopPropagation()
+                             setSelectedStatuses(selectedStatuses.filter(s => s !== value))
+                           }}
+                           onMouseDown={(e) => e.stopPropagation()}
+                         />
+                       ))}
+                     </Box>
+                   )
+                 },
                }}
                value={selectedStatuses}
                onChange={(e) => setSelectedStatuses(e.target.value)}
@@ -463,7 +670,25 @@ export default function DashboardPage() {
         open={detailModalOpen}
         onClose={() => setDetailModalOpen(false)}
         onStatusUpdate={handleStatusUpdate}
+        onEmailSent={(prospectName) => showSnackbar(`Email sent successfully to ${prospectName}!`, 'success')}
       />
+
+      {/* Success Snackbar */}
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={6000}
+        onClose={handleCloseSnackbar}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+      >
+        <MuiAlert 
+          onClose={handleCloseSnackbar} 
+          severity={snackbar.severity}
+          variant="filled"
+          sx={{ width: '100%' }}
+        >
+          {snackbar.message}
+        </MuiAlert>
+      </Snackbar>
     </Container>
   )
 }

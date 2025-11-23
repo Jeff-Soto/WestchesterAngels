@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import {
   Dialog,
   DialogTitle,
@@ -18,7 +19,9 @@ import {
   ListItem,
   ListItemText,
   useTheme,
-  useMediaQuery
+  useMediaQuery,
+  CircularProgress,
+  Alert
 } from '@mui/material'
 import {
   Close as CloseIcon,
@@ -34,12 +37,65 @@ import {
   InfoOutlined as InfoIcon
 } from '@mui/icons-material'
 import { statusLabels } from '@/lib/mockData'
+import EmailComposeModal from './EmailComposeModal'
 
-export default function ProspectDetailModal({ prospect, open, onClose, onStatusUpdate }) {
+export default function ProspectDetailModal({ prospect, open, onClose, onStatusUpdate, onEmailSent }) {
+  const [emailModalOpen, setEmailModalOpen] = useState(false)
+  const [generatingEmail, setGeneratingEmail] = useState(false)
+  const [emailError, setEmailError] = useState(null)
+  const [generatedEmail, setGeneratedEmail] = useState(null)
   const theme = useTheme()
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'))
   
   if (!prospect) return null
+
+  const handleSendEmailClick = async () => {
+    setGeneratingEmail(true)
+    setEmailError(null)
+    setGeneratedEmail(null)
+
+    try {
+      const response = await fetch('/api/email/generate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          prospectId: prospect.id
+        })
+      })
+
+      const result = await response.json()
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.error || 'Failed to generate email')
+      }
+
+      setGeneratedEmail(result.data)
+      setEmailModalOpen(true)
+    } catch (error) {
+      console.error('Error generating email:', error)
+      setEmailError(error.message || 'Failed to generate email')
+    } finally {
+      setGeneratingEmail(false)
+    }
+  }
+
+  const handleEmailSend = async (emailData) => {
+    // Fake send - just update the status
+    if (onStatusUpdate) {
+      onStatusUpdate(prospect.id, 'contacted')
+    }
+    
+    // Show success via callback
+    if (onEmailSent) {
+      onEmailSent(prospect.name)
+    }
+    
+    // Close email modal
+    setEmailModalOpen(false)
+    setGeneratedEmail(null)
+  }
 
   const getScoreColor = (score) => {
     if (score >= 90) return 'success'
@@ -355,17 +411,33 @@ export default function ProspectDetailModal({ prospect, open, onClose, onStatusU
         >
           Close
         </Button>
+        {emailError && (
+          <Alert severity="error" sx={{ flex: 1 }}>
+            {emailError}
+          </Alert>
+        )}
         <Button 
           variant="contained" 
-          startIcon={<EmailIcon />}
-          onClick={() => {
-            window.location.href = `mailto:${prospect.email}`
-          }}
+          startIcon={generatingEmail ? <CircularProgress size={20} /> : <EmailIcon />}
+          onClick={handleSendEmailClick}
+          disabled={generatingEmail}
           fullWidth={isMobile}
         >
-          Send Email
+          {generatingEmail ? 'Generating Email...' : 'Send Email'}
         </Button>
       </DialogActions>
+
+      {/* Email Compose Modal */}
+      <EmailComposeModal
+        open={emailModalOpen}
+        onClose={() => {
+          setEmailModalOpen(false)
+          setGeneratedEmail(null)
+        }}
+        prospect={prospect}
+        initialEmail={generatedEmail}
+        onSend={handleEmailSend}
+      />
     </Dialog>
   )
 }
