@@ -544,6 +544,7 @@ export function calculateStats(prospects) {
       byStatus: {},
       bySector: {},
       byState: {},
+      byCity: {},
       scoreDistribution: []
     }
   }
@@ -556,6 +557,7 @@ export function calculateStats(prospects) {
     byStatus: {},
     bySector: {},
     byState: {},
+    byCity: {},
     scoreDistribution: [
       { range: '90-100', count: 0 },
       { range: '80-89', count: 0 },
@@ -576,6 +578,12 @@ export function calculateStats(prospects) {
     
     // By state
     stats.byState[prospect.location.state] = (stats.byState[prospect.location.state] || 0) + 1
+    
+    // By city
+    if (prospect.location.city) {
+      const cityKey = `${prospect.location.city}, ${prospect.location.state}`
+      stats.byCity[cityKey] = (stats.byCity[cityKey] || 0) + 1
+    }
     
     // Score distribution
     if (prospect.fitScore >= 90) stats.scoreDistribution[0].count++

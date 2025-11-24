@@ -5,8 +5,6 @@
  * Handles both seeded mockData format and normalized CSV format.
  */
 
-import { calculateRelevanceScore } from '@/lib/filtering/relevanceFilter';
-
 /**
  * Transforms a MongoDB prospect document to dashboard format
  * Handles both seeded mockData format and normalized CSV format
@@ -41,29 +39,9 @@ export function transformProspectForDashboard(dbProspect) {
       });
     }
     
-    // Always recalculate relevanceScore to ensure it's using the latest 0-100 scale
-    // (old data might have 0-20 scores stored)
-    // Build prospect object for calculateRelevanceScore
-    const prospectForScoring = {
-      hqState: dbProspect.hqState || dbProspect.location?.state,
-      hqCity: dbProspect.hqCity || dbProspect.location?.city,
-      hqCountry: dbProspect.hqCountry || dbProspect.location?.country || 'US',
-      investsInUS: dbProspect.investsInUS !== undefined ? dbProspect.investsInUS : true,
-      isTriStateHQ: dbProspect.isTriStateHQ !== undefined 
-        ? dbProspect.isTriStateHQ 
-        : ['NY', 'NJ', 'CT'].includes(dbProspect.location?.state),
-      stages: dbProspect.stages || stagePreferences || [],
-      countries: dbProspect.countries || ['USA'],
-      investorType: dbProspect.investorType,
-      email: dbProspect.email,
-      phone: dbProspect.phone,
-      portfolio: dbProspect.portfolio
-    };
-    
-    // Always recalculate to ensure we're using the new 0-100 scale
-    const relevanceScore = calculateRelevanceScore(prospectForScoring);
-    
-    // relevanceScore is now 0-100, use it directly as fitScore
+    // Use stored relevanceScore from database (calculated during CSV import)
+    // Fallback to 0 if missing (shouldn't happen after re-upload, but safe fallback)
+    const relevanceScore = dbProspect.relevanceScore ?? 0;
     const fitScore = Math.round(relevanceScore);
     
     // Ensure status exists (required by dashboard)
@@ -150,27 +128,9 @@ export function transformProspectForDashboard(dbProspect) {
     max: dbProspect.maxCheckUsd || null
   };
   
-  // Always recalculate relevanceScore to ensure it's using the latest 0-100 scale
-  // (old data might have 0-20 scores stored)
-  // Build prospect object for calculateRelevanceScore
-  const prospectForScoring = {
-    hqState: dbProspect.hqState,
-    hqCity: dbProspect.hqCity,
-    hqCountry: dbProspect.hqCountry || 'US',
-    investsInUS: dbProspect.investsInUS !== undefined ? dbProspect.investsInUS : true,
-    isTriStateHQ: dbProspect.isTriStateHQ,
-    stages: dbProspect.stages || [],
-    countries: dbProspect.countries || [],
-    investorType: dbProspect.investorType,
-    email: dbProspect.email,
-    phone: dbProspect.phone,
-    portfolio: dbProspect.portfolio
-  };
-  
-  // Always recalculate to ensure we're using the new 0-100 scale
-  const relevanceScore = calculateRelevanceScore(prospectForScoring);
-  
-  // relevanceScore is now 0-100, use it directly as fitScore
+  // Use stored relevanceScore from database (calculated during CSV import)
+  // Fallback to 0 if missing (shouldn't happen after re-upload, but safe fallback)
+  const relevanceScore = dbProspect.relevanceScore ?? 0;
   const fitScore = Math.round(relevanceScore);
   
   return {

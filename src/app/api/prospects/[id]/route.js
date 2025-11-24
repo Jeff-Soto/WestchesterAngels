@@ -4,7 +4,7 @@ import { transformProspectForDashboard } from '@/lib/utils/transformProspect'
 
 export async function GET(request, { params }) {
   try {
-    const { id } = params
+    const { id } = await params
     
     if (!process.env.MONGODB_URI) {
       return NextResponse.json(
@@ -61,7 +61,7 @@ export async function GET(request, { params }) {
 
 export async function PATCH(request, { params }) {
   try {
-    const { id } = params
+    const { id } = await params
     const body = await request.json()
     
     if (!process.env.MONGODB_URI) {

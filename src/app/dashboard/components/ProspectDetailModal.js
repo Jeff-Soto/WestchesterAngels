@@ -38,6 +38,7 @@ import {
 } from '@mui/icons-material'
 import { statusLabels } from '@/lib/mockData'
 import EmailComposeModal from './EmailComposeModal'
+import LinkedInMessageModal from './LinkedInMessageModal'
 import { generateMatchReasons } from '@/lib/utils/matchReasons'
 import { estimateDistanceFromNYC, getDistanceDescription, getMetroScore } from '@/lib/utils/distance'
 import { calculateRelevanceScore } from '@/lib/filtering/relevanceFilter'
@@ -48,6 +49,10 @@ export default function ProspectDetailModal({ prospect, open, onClose, onStatusU
   const [generatingEmail, setGeneratingEmail] = useState(false)
   const [emailError, setEmailError] = useState(null)
   const [generatedEmail, setGeneratedEmail] = useState(null)
+  const [linkedInModalOpen, setLinkedInModalOpen] = useState(false)
+  const [generatingLinkedIn, setGeneratingLinkedIn] = useState(false)
+  const [linkedInError, setLinkedInError] = useState(null)
+  const [generatedLinkedInMessage, setGeneratedLinkedInMessage] = useState(null)
   const [aiExplanation, setAiExplanation] = useState(prospect?.aiMatchExplanation || null)
   const [generatingExplanation, setGeneratingExplanation] = useState(false)
   const [researchNotes, setResearchNotes] = useState(prospect?.researchNotes || null)
@@ -66,6 +71,10 @@ export default function ProspectDetailModal({ prospect, open, onClose, onStatusU
       setGeneratedEmail(null)
       setGeneratingEmail(false)
       setEmailModalOpen(false)
+      setLinkedInError(null)
+      setGeneratedLinkedInMessage(null)
+      setGeneratingLinkedIn(false)
+      setLinkedInModalOpen(false)
     }
   }, [open])
 
@@ -196,6 +205,65 @@ export default function ProspectDetailModal({ prospect, open, onClose, onStatusU
     // Close email modal
     setEmailModalOpen(false)
     setGeneratedEmail(null)
+    
+    // Auto-scroll to timeline after a brief delay to allow DOM update
+    setTimeout(() => {
+      if (timelineRef.current) {
+        timelineRef.current.scrollIntoView({ 
+          behavior: 'smooth', 
+          block: 'nearest' 
+        })
+      }
+    }, 100)
+  }
+
+  const handleGenerateLinkedInClick = async () => {
+    setGeneratingLinkedIn(true)
+    setLinkedInError(null)
+    setGeneratedLinkedInMessage(null)
+
+    try {
+      const response = await fetch('/api/linkedin/generate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          prospectId: displayProspect.id
+        })
+      })
+
+      const result = await response.json()
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.error || 'Failed to generate LinkedIn message')
+      }
+
+      setGeneratedLinkedInMessage(result.data)
+      setLinkedInModalOpen(true)
+    } catch (error) {
+      console.error('Error generating LinkedIn message:', error)
+      setLinkedInError(error.message || 'Failed to generate LinkedIn message')
+    } finally {
+      setGeneratingLinkedIn(false)
+    }
+  }
+
+  const handleLinkedInMessageGenerated = async () => {
+    // Update local prospect state immediately for responsive UI
+    const now = new Date().toISOString()
+    const currentProspect = localProspect || prospect
+    const updatedProspect = {
+      ...currentProspect,
+      status: 'contacted',
+      lastContactedAt: now
+    }
+    setLocalProspect(updatedProspect)
+    
+    // Update status in database
+    if (onStatusUpdate) {
+      await onStatusUpdate(currentProspect.id, 'contacted')
+    }
     
     // Auto-scroll to timeline after a brief delay to allow DOM update
     setTimeout(() => {
@@ -439,21 +507,6 @@ export default function ProspectDetailModal({ prospect, open, onClose, onStatusU
                 <strong>Sector Focus:</strong> {portfolioAnalysis.sectorFocus}
               </Typography>
             )}
-          </Paper>
-        )}
-
-        {/* Investment Thesis */}
-        {displayProspect.investmentThesis && (
-          <Paper sx={{ p: { xs: 2, sm: 3 }, mb: 3, bgcolor: 'primary.light', color: 'primary.contrastText' }}>
-            <Stack direction="row" spacing={1} alignItems="center" mb={2}>
-              <InfoIcon />
-              <Typography variant="h6" fontWeight="bold">
-                Investment Thesis
-              </Typography>
-            </Stack>
-            <Typography variant="body2">
-              {displayProspect.investmentThesis}
-            </Typography>
           </Paper>
         )}
 
@@ -856,20 +909,34 @@ export default function ProspectDetailModal({ prospect, open, onClose, onStatusU
         >
           Close
         </Button>
-        {emailError && (
+        {(emailError || linkedInError) && (
           <Alert severity="error" sx={{ flex: 1 }}>
-            {emailError}
+            {emailError || linkedInError}
           </Alert>
         )}
-        <Button 
-          variant="contained" 
-          startIcon={generatingEmail ? <CircularProgress size={20} /> : <EmailIcon />}
-          onClick={handleSendEmailClick}
-          disabled={generatingEmail}
-          fullWidth={isMobile}
-        >
-          {generatingEmail ? 'Generating Email...' : 'Send Email'}
-        </Button>
+        {displayProspect.linkedin && (
+          <Button 
+            variant="contained" 
+            color="primary"
+            startIcon={generatingLinkedIn ? <CircularProgress size={20} /> : <LinkedInIcon />}
+            onClick={handleGenerateLinkedInClick}
+            disabled={generatingLinkedIn}
+            fullWidth={isMobile}
+          >
+            {generatingLinkedIn ? 'Generating Message...' : 'Contact on LinkedIn'}
+          </Button>
+        )}
+        {displayProspect.email && (
+          <Button 
+            variant="contained" 
+            startIcon={generatingEmail ? <CircularProgress size={20} /> : <EmailIcon />}
+            onClick={handleSendEmailClick}
+            disabled={generatingEmail}
+            fullWidth={isMobile}
+          >
+            {generatingEmail ? 'Generating Email...' : 'Send Email'}
+          </Button>
+        )}
       </DialogActions>
 
       {/* Email Compose Modal */}
@@ -882,6 +949,18 @@ export default function ProspectDetailModal({ prospect, open, onClose, onStatusU
         prospect={displayProspect}
         initialEmail={generatedEmail}
         onSend={handleEmailSend}
+      />
+
+      {/* LinkedIn Message Modal */}
+      <LinkedInMessageModal
+        open={linkedInModalOpen}
+        onClose={() => {
+          setLinkedInModalOpen(false)
+          setGeneratedLinkedInMessage(null)
+        }}
+        prospect={displayProspect}
+        initialMessage={generatedLinkedInMessage}
+        onMessageGenerated={handleLinkedInMessageGenerated}
       />
     </Dialog>
   )
