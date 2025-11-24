@@ -18,8 +18,7 @@ import { parseMarkdown } from '@/lib/utils/parseMarkdown'
 import {
   Close as CloseIcon,
   Send as SendIcon,
-  SmartToy as ChatbotIcon,
-  Minimize as MinimizeIcon
+  SmartToy as ChatbotIcon
 } from '@mui/icons-material'
 
 export default function Chatbot() {
@@ -32,7 +31,6 @@ export default function Chatbot() {
   ])
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
-  const [minimized, setMinimized] = useState(false)
   const messagesEndRef = useRef(null)
   const inputRef = useRef(null)
 
@@ -45,10 +43,10 @@ export default function Chatbot() {
   }, [messages])
 
   useEffect(() => {
-    if (open && !minimized) {
+    if (open) {
       inputRef.current?.focus()
     }
-  }, [open, minimized])
+  }, [open])
 
   const handleSend = async () => {
     if (!input.trim() || loading) return
@@ -140,87 +138,77 @@ export default function Chatbot() {
 
   return (
     <>
-      {/* Floating Action Button */}
-      <Fab
-        color="primary"
-        aria-label="chatbot"
+      {/* Floating Action Button - Only show when chatbot is closed */}
+      {!open && (
+        <Fab
+          color="primary"
+          aria-label="chatbot"
         onClick={() => {
           setOpen(true)
-          setMinimized(false)
         }}
-        sx={{
-          position: 'fixed',
-          bottom: 24,
-          right: 24,
-          zIndex: 1000,
-          boxShadow: 3
-        }}
-      >
-        <ChatbotIcon />
-      </Fab>
+          sx={{
+            position: 'fixed',
+            bottom: 24,
+            right: 24,
+            zIndex: 1000,
+            boxShadow: 3
+          }}
+        >
+          <ChatbotIcon />
+        </Fab>
+      )}
 
       {/* Chatbot Dialog */}
-      <Dialog
-        open={open}
-        onClose={() => {}} // Prevent closing on backdrop click
-        maxWidth="sm"
-        fullWidth={false}
-        disableEscapeKeyDown={false}
-        hideBackdrop={true}
-        PaperProps={{
-          sx: {
+      {open && (
+        <Box
+          sx={{
             position: 'fixed',
-            bottom: minimized ? 'auto' : 80,
-            right: minimized ? 24 : 24,
+            bottom: 24,
+            right: 24,
             left: 'auto',
-            m: minimized ? 0 : 0,
-            maxHeight: minimized ? 'auto' : '70vh',
-            height: minimized ? 'auto' : '600px',
-            width: minimized ? 'auto' : '450px',
+            width: '450px',
+            height: '600px',
+            maxHeight: '70vh',
+            zIndex: 1300,
+            pointerEvents: 'none',
             display: 'flex',
-            flexDirection: 'column',
-            margin: 0,
-            pointerEvents: 'auto',
-            boxShadow: 6
-          }
-        }}
-        sx={{
-          position: 'fixed',
-          pointerEvents: 'none',
-          zIndex: 1300
-        }}
-      >
-        <DialogTitle sx={{ 
-          display: 'flex', 
-          justifyContent: 'space-between', 
-          alignItems: 'center',
-          pb: 1
-        }}>
-          <Stack direction="row" spacing={1} alignItems="center">
-            <ChatbotIcon color="primary" />
-            <Typography variant="h6">AI Assistant</Typography>
-          </Stack>
-          <Stack direction="row" spacing={1}>
-            <IconButton
-              size="small"
-              onClick={() => setMinimized(!minimized)}
-              aria-label={minimized ? 'expand' : 'minimize'}
-            >
-              <MinimizeIcon />
-            </IconButton>
-            <IconButton
-              size="small"
-              onClick={() => setOpen(false)}
-              aria-label="close"
-            >
-              <CloseIcon />
-            </IconButton>
-          </Stack>
-        </DialogTitle>
+            flexDirection: 'column'
+          }}
+        >
+          <Paper
+            elevation={6}
+            sx={{
+              display: 'flex',
+              flexDirection: 'column',
+              height: '100%',
+              maxHeight: '100%',
+              pointerEvents: 'auto',
+              overflow: 'hidden'
+            }}
+          >
+            <Box sx={{ 
+              display: 'flex', 
+              justifyContent: 'space-between', 
+              alignItems: 'center',
+              p: 2,
+              pb: 1,
+              borderBottom: '1px solid',
+              borderColor: 'divider'
+            }}>
+              <Stack direction="row" spacing={1} alignItems="center">
+                <ChatbotIcon color="primary" />
+                <Typography variant="h6">AI Assistant</Typography>
+              </Stack>
+              <IconButton
+                size="small"
+                onClick={() => setOpen(false)}
+                aria-label="close"
+              >
+                <CloseIcon />
+              </IconButton>
+            </Box>
 
-        {!minimized && (
-          <>
-            <DialogContent dividers sx={{ flex: 1, overflow: 'auto', p: 2 }}>
+            <Box sx={{ flex: 1, overflow: 'auto', p: 2 }}>
               <Stack spacing={2}>
                 {messages.map((message, idx) => (
                   <Box
@@ -286,38 +274,38 @@ export default function Chatbot() {
                   </Box>
                 )}
 
-                <div ref={messagesEndRef} />
-              </Stack>
-            </DialogContent>
+                  <div ref={messagesEndRef} />
+                </Stack>
+                </Box>
 
-            <DialogActions sx={{ p: 2, pt: 1 }}>
-              <TextField
-                inputRef={inputRef}
-                fullWidth
-                placeholder="Ask me anything about the system..."
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyPress={handleKeyPress}
-                disabled={loading}
-                variant="outlined"
-                size="small"
-                InputProps={{
-                  endAdornment: (
-                    <IconButton
-                      onClick={handleSend}
-                      disabled={!input.trim() || loading}
-                      color="primary"
-                      edge="end"
-                    >
-                      {loading ? <CircularProgress size={20} /> : <SendIcon />}
-                    </IconButton>
-                  )
-                }}
-              />
-            </DialogActions>
-          </>
-        )}
-      </Dialog>
+                <Box sx={{ p: 2, pt: 1, borderTop: '1px solid', borderColor: 'divider' }}>
+                  <TextField
+                    inputRef={inputRef}
+                    fullWidth
+                    placeholder="Ask me anything about the system..."
+                    value={input}
+                    onChange={(e) => setInput(e.target.value)}
+                    onKeyPress={handleKeyPress}
+                    disabled={loading}
+                    variant="outlined"
+                    size="small"
+                    InputProps={{
+                      endAdornment: (
+                        <IconButton
+                          onClick={handleSend}
+                          disabled={!input.trim() || loading}
+                          color="primary"
+                          edge="end"
+                        >
+                          {loading ? <CircularProgress size={20} /> : <SendIcon />}
+                        </IconButton>
+                      )
+                    }}
+                  />
+                </Box>
+          </Paper>
+        </Box>
+      )}
     </>
   )
 }
