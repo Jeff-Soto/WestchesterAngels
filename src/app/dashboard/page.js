@@ -62,6 +62,13 @@ export default function DashboardPage() {
   const [analyticsExpanded, setAnalyticsExpanded] = useState(false)
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' })
   const [csvUploadOpen, setCsvUploadOpen] = useState(false)
+  // Track which select dropdowns are open
+  const [openSelects, setOpenSelects] = useState({
+    status: false,
+    sectors: false,
+    states: false,
+    cities: false
+  })
 
   // Helper function to apply all filters
   const applyFilters = useCallback((prospects, filters) => {
@@ -267,13 +274,48 @@ export default function DashboardPage() {
   }
 
   // Handle status update
-  const handleStatusUpdate = (prospectId, newStatus) => {
-    // Update local state (no DB, so just update component state)
+  const handleStatusUpdate = async (prospectId, newStatus) => {
+    // Store previous status for potential rollback
+    const previousProspect = allProspects.find(p => p.id === prospectId)
+    const previousStatus = previousProspect?.status || 'new'
+
+    // Update local state immediately for responsive UI
     setAllProspects(prevProspects => 
       prevProspects.map(p => 
         p.id === prospectId ? { ...p, status: newStatus } : p
       )
     )
+
+    // Update database
+    try {
+      const response = await fetch(`/api/prospects/${prospectId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          status: newStatus
+        })
+      })
+
+      const result = await response.json()
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.error || 'Failed to update status')
+      }
+
+      // Success - status is already updated in local state
+    } catch (error) {
+      console.error('Error updating prospect status:', error)
+      // Revert local state on error
+      setAllProspects(prevProspects => 
+        prevProspects.map(p => 
+          p.id === prospectId ? { ...p, status: previousStatus } : p
+        )
+      )
+      // Show error to user
+      showSnackbar(`Failed to update status: ${error.message}`, 'error')
+    }
   }
 
   // Clear filters
@@ -334,7 +376,7 @@ export default function DashboardPage() {
                 Investor Prospects
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                Demo POC with mock data
+                Manage and track your investor pipeline
               </Typography>
             </Box>
           </Stack>
@@ -543,6 +585,9 @@ export default function DashboardPage() {
                SelectProps={{
                  multiple: true,
                  displayEmpty: true,
+                 open: openSelects.status,
+                 onOpen: () => setOpenSelects(prev => ({ ...prev, status: true })),
+                 onClose: () => setOpenSelects(prev => ({ ...prev, status: false })),
                  renderValue: (selected) => {
                    if (!selected || selected.length === 0) {
                      return <em style={{ color: 'rgba(0, 0, 0, 0.6)', fontStyle: 'normal' }}>All statuses</em>
@@ -566,7 +611,11 @@ export default function DashboardPage() {
                  },
                }}
                value={selectedStatuses}
-               onChange={(e) => setSelectedStatuses(e.target.value)}
+               onChange={(e) => {
+                 setSelectedStatuses(e.target.value)
+                 // Close the select after selection
+                 setTimeout(() => setOpenSelects(prev => ({ ...prev, status: false })), 100)
+               }}
              >
                {Object.entries(statusLabels).map(([key, value]) => (
                  <MenuItem key={key} value={key}>
@@ -615,6 +664,9 @@ export default function DashboardPage() {
                SelectProps={{
                  multiple: true,
                  displayEmpty: true,
+                 open: openSelects.sectors,
+                 onOpen: () => setOpenSelects(prev => ({ ...prev, sectors: true })),
+                 onClose: () => setOpenSelects(prev => ({ ...prev, sectors: false })),
                  renderValue: (selected) => {
                    if (!selected || selected.length === 0) {
                      return <em style={{ color: 'rgba(0, 0, 0, 0.6)', fontStyle: 'normal' }}>All sectors</em>
@@ -638,7 +690,11 @@ export default function DashboardPage() {
                  },
                }}
                value={selectedSectors}
-               onChange={(e) => setSelectedSectors(e.target.value)}
+               onChange={(e) => {
+                 setSelectedSectors(e.target.value)
+                 // Close the select after selection
+                 setTimeout(() => setOpenSelects(prev => ({ ...prev, sectors: false })), 100)
+               }}
              >
                {filterOptions.sectors.map((option) => (
                  <MenuItem key={option} value={option}>
@@ -687,6 +743,9 @@ export default function DashboardPage() {
                SelectProps={{
                  multiple: true,
                  displayEmpty: true,
+                 open: openSelects.states,
+                 onOpen: () => setOpenSelects(prev => ({ ...prev, states: true })),
+                 onClose: () => setOpenSelects(prev => ({ ...prev, states: false })),
                  renderValue: (selected) => {
                    if (!selected || selected.length === 0) {
                      return <em style={{ color: 'rgba(0, 0, 0, 0.6)', fontStyle: 'normal' }}>All states</em>
@@ -724,6 +783,8 @@ export default function DashboardPage() {
                      })
                    );
                  }
+                 // Close the select after selection
+                 setTimeout(() => setOpenSelects(prev => ({ ...prev, states: false })), 100)
                }}
              >
                {filterOptions.states.map((option) => (
@@ -745,7 +806,7 @@ export default function DashboardPage() {
                  shrink: true
                }}
                disabled={selectedStates.length === 0 && filterOptions.cities.length === 0}
-               helperText={selectedStates.length > 0 ? `Showing cities from selected states` : filterOptions.cities.length === 0 ? 'No city data available' : 'Select a state first to filter cities'}
+               helperText={selectedStates.length > 0 ? `Showing cities from selected states` : filterOptions.cities.length === 0 ? 'No city data available' : ''}
                sx={{
                  '& .MuiInputLabel-root': {
                    color: selectedCities.length === 0 ? 'rgba(0, 0, 0, 0.6)' : undefined,
@@ -775,6 +836,9 @@ export default function DashboardPage() {
                SelectProps={{
                  multiple: true,
                  displayEmpty: true,
+                 open: openSelects.cities,
+                 onOpen: () => setOpenSelects(prev => ({ ...prev, cities: true })),
+                 onClose: () => setOpenSelects(prev => ({ ...prev, cities: false })),
                  renderValue: (selected) => {
                    if (!selected || selected.length === 0) {
                      return <em style={{ color: 'rgba(0, 0, 0, 0.6)', fontStyle: 'normal' }}>All cities</em>
@@ -798,7 +862,11 @@ export default function DashboardPage() {
                  },
                }}
                value={selectedCities}
-               onChange={(e) => setSelectedCities(e.target.value)}
+               onChange={(e) => {
+                 setSelectedCities(e.target.value)
+                 // Close the select after selection
+                 setTimeout(() => setOpenSelects(prev => ({ ...prev, cities: false })), 100)
+               }}
              >
                {(() => {
                  // Filter cities based on selected states

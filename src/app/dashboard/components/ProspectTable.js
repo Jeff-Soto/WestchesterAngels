@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import {
   Table,
   TableBody,
@@ -31,6 +31,11 @@ export default function ProspectTable({ prospects, onProspectClick, onStatusUpda
   const [rowsPerPage, setRowsPerPage] = useState(25)
   const [orderBy, setOrderBy] = useState('fitScore')
   const [order, setOrder] = useState('desc')
+
+  // Reset to page 0 whenever the prospects list changes (e.g., when filters are applied)
+  useEffect(() => {
+    setPage(0)
+  }, [prospects.length])
 
   const handleSort = (property) => {
     const isAsc = orderBy === property && order === 'asc'

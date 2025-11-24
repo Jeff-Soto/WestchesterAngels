@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import {
   Dialog,
   DialogTitle,
@@ -53,6 +53,9 @@ export default function ProspectDetailModal({ prospect, open, onClose, onStatusU
   const [researchNotes, setResearchNotes] = useState(prospect?.researchNotes || null)
   const [generatingResearch, setGeneratingResearch] = useState(false)
   const [portfolioAnalysis, setPortfolioAnalysis] = useState(prospect?.portfolioAnalysis || null)
+  // Local prospect state to allow immediate UI updates
+  const [localProspect, setLocalProspect] = useState(prospect)
+  const timelineRef = useRef(null)
   const theme = useTheme()
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'))
   
@@ -66,14 +69,18 @@ export default function ProspectDetailModal({ prospect, open, onClose, onStatusU
     }
   }, [open])
 
-  // Update AI data when prospect changes
+  // Update local prospect and AI data when prospect prop changes
   useEffect(() => {
     if (prospect) {
+      setLocalProspect(prospect)
       setAiExplanation(prospect.aiMatchExplanation || null)
       setResearchNotes(prospect.researchNotes || null)
       setPortfolioAnalysis(prospect.portfolioAnalysis || null)
     }
   }, [prospect])
+
+  // Use localProspect for display, fallback to prospect prop
+  const displayProspect = localProspect || prospect
 
   const handleGenerateAIExplanation = async () => {
     setGeneratingExplanation(true)
@@ -84,7 +91,7 @@ export default function ProspectDetailModal({ prospect, open, onClose, onStatusU
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          prospectId: prospect.id
+          prospectId: displayProspect.id
         })
       })
 
@@ -112,7 +119,7 @@ export default function ProspectDetailModal({ prospect, open, onClose, onStatusU
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          prospectId: prospect.id
+          prospectId: displayProspect.id
         })
       })
 
@@ -131,7 +138,7 @@ export default function ProspectDetailModal({ prospect, open, onClose, onStatusU
     }
   }
   
-  if (!prospect) return null
+  if (!displayProspect) return null
 
   const handleSendEmailClick = async () => {
     setGeneratingEmail(true)
@@ -145,7 +152,7 @@ export default function ProspectDetailModal({ prospect, open, onClose, onStatusU
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          prospectId: prospect.id
+          prospectId: displayProspect.id
         })
       })
 
@@ -166,19 +173,39 @@ export default function ProspectDetailModal({ prospect, open, onClose, onStatusU
   }
 
   const handleEmailSend = async (emailData) => {
-    // Fake send - just update the status
+    // Update local prospect state immediately for responsive UI
+    const now = new Date().toISOString()
+    const currentProspect = localProspect || prospect
+    const updatedProspect = {
+      ...currentProspect,
+      status: 'contacted',
+      lastContactedAt: now
+    }
+    setLocalProspect(updatedProspect)
+    
+    // Update status in database
     if (onStatusUpdate) {
-      onStatusUpdate(prospect.id, 'contacted')
+      await onStatusUpdate(currentProspect.id, 'contacted')
     }
     
     // Show success via callback
     if (onEmailSent) {
-      onEmailSent(prospect.name)
+      onEmailSent(currentProspect.name)
     }
     
     // Close email modal
     setEmailModalOpen(false)
     setGeneratedEmail(null)
+    
+    // Auto-scroll to timeline after a brief delay to allow DOM update
+    setTimeout(() => {
+      if (timelineRef.current) {
+        timelineRef.current.scrollIntoView({ 
+          behavior: 'smooth', 
+          block: 'nearest' 
+        })
+      }
+    }, 100)
   }
 
   const getScoreColor = (score) => {
@@ -191,9 +218,9 @@ export default function ProspectDetailModal({ prospect, open, onClose, onStatusU
 
   // Calculate feature scores based on actual prospect data
   const featureScores = {
-    geoProximity: ['NY', 'NJ', 'CT', 'PA'].includes(prospect.location?.state || prospect.hqState) ? 100 : 60,
-    stageMatch: (prospect.stagePreferences || []).some(s => ['Seed', 'Series A', 'Pre-Seed'].includes(s)) ? 100 : 75,
-    recentActivity: prospect.lastContactedAt ? 85 : (prospect.updatedAt ? 70 : 50)
+    geoProximity: ['NY', 'NJ', 'CT', 'PA'].includes(displayProspect.location?.state || displayProspect.hqState) ? 100 : 60,
+    stageMatch: (displayProspect.stagePreferences || []).some(s => ['Seed', 'Series A', 'Pre-Seed'].includes(s)) ? 100 : 75,
+    recentActivity: displayProspect.lastContactedAt ? 85 : (displayProspect.updatedAt ? 70 : 50)
   }
 
   return (
@@ -208,10 +235,10 @@ export default function ProspectDetailModal({ prospect, open, onClose, onStatusU
         <Stack direction="row" alignItems="center" justifyContent="space-between">
           <Box>
             <Typography variant="h5" component="div">
-              {prospect.name}
+              {displayProspect.name}
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              {prospect.org}
+              {displayProspect.org}
             </Typography>
           </Box>
           <IconButton onClick={onClose} size="small">
@@ -247,13 +274,13 @@ export default function ProspectDetailModal({ prospect, open, onClose, onStatusU
                 variant="h3" 
                 fontWeight="bold" 
                 sx={{ 
-                  fontSize: prospect.fitScore >= 100 
+                  fontSize: displayProspect.fitScore >= 100 
                     ? { xs: '1.75rem', sm: '2.5rem' }
                     : { xs: '2rem', sm: '3rem' },
                   lineHeight: 1
                 }}
               >
-                {prospect.fitScore}
+                {displayProspect.fitScore}
               </Typography>
             </Box>
             <Box flex={1} sx={{ textAlign: { xs: 'center', sm: 'left' } }}>
@@ -261,7 +288,7 @@ export default function ProspectDetailModal({ prospect, open, onClose, onStatusU
                 Fit Score
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                {prospect.whySummary}
+                {displayProspect.whySummary}
               </Typography>
             </Box>
           </Stack>
@@ -302,7 +329,7 @@ export default function ProspectDetailModal({ prospect, open, onClose, onStatusU
         </Paper>
 
         {/* Why They Match Section */}
-        {prospect.hqState && (
+        {displayProspect.hqState && (
           <Paper sx={{ p: { xs: 2, sm: 3 }, mb: 3, bgcolor: 'success.light', color: 'success.contrastText' }}>
             <Stack direction="row" spacing={1} alignItems="center" justifyContent="space-between" mb={2}>
               <Stack direction="row" spacing={1} alignItems="center">
@@ -333,7 +360,7 @@ export default function ProspectDetailModal({ prospect, open, onClose, onStatusU
               )}
             </Stack>
             <Stack spacing={1.5}>
-              {generateMatchReasons({ ...prospect, aiMatchExplanation: aiExplanation }).map((reason, idx) => (
+              {generateMatchReasons({ ...displayProspect, aiMatchExplanation: aiExplanation }).map((reason, idx) => (
                 <Stack 
                   key={idx} 
                   direction="row" 
@@ -357,19 +384,19 @@ export default function ProspectDetailModal({ prospect, open, onClose, onStatusU
             </Stack>
             
             {/* Distance and Metro Score */}
-            {prospect.hqState && (prospect.hqState === 'NY' || prospect.hqState === 'NJ' || prospect.hqState === 'CT' || prospect.hqState === 'PA') && (
+            {displayProspect.hqState && (displayProspect.hqState === 'NY' || displayProspect.hqState === 'NJ' || displayProspect.hqState === 'CT' || displayProspect.hqState === 'PA') && (
               <Box sx={{ mt: 2, pt: 2, borderTop: '1px solid rgba(255, 255, 255, 0.2)' }}>
                 <Stack direction="row" spacing={2} alignItems="center">
                   <PlaceIcon fontSize="small" />
                   <Typography variant="body2">
-                    {prospect.hqCity || 'Location'}, {prospect.hqState}
+                    {displayProspect.hqCity || 'Location'}, {displayProspect.hqState}
                     {(() => {
-                      const distance = estimateDistanceFromNYC(prospect.hqState, prospect.hqCity);
+                      const distance = estimateDistanceFromNYC(displayProspect.hqState, displayProspect.hqCity);
                       return distance !== null ? ` (${getDistanceDescription(distance)})` : '';
                     })()}
                   </Typography>
                   <Chip 
-                    label={`Metro Score: ${getMetroScore(estimateDistanceFromNYC(prospect.hqState, prospect.hqCity))}`}
+                    label={`Metro Score: ${getMetroScore(estimateDistanceFromNYC(displayProspect.hqState, displayProspect.hqCity))}`}
                     size="small"
                     sx={{ 
                       bgcolor: 'rgba(255, 255, 255, 0.3)',
@@ -416,7 +443,7 @@ export default function ProspectDetailModal({ prospect, open, onClose, onStatusU
         )}
 
         {/* Investment Thesis */}
-        {prospect.investmentThesis && (
+        {displayProspect.investmentThesis && (
           <Paper sx={{ p: { xs: 2, sm: 3 }, mb: 3, bgcolor: 'primary.light', color: 'primary.contrastText' }}>
             <Stack direction="row" spacing={1} alignItems="center" mb={2}>
               <InfoIcon />
@@ -425,7 +452,7 @@ export default function ProspectDetailModal({ prospect, open, onClose, onStatusU
               </Typography>
             </Stack>
             <Typography variant="body2">
-              {prospect.investmentThesis}
+              {displayProspect.investmentThesis}
             </Typography>
           </Paper>
         )}
@@ -479,9 +506,9 @@ export default function ProspectDetailModal({ prospect, open, onClose, onStatusU
               <Stack spacing={1.5}>
                 <Stack direction="row" spacing={1} alignItems="center">
                   <EmailIcon color="primary" fontSize="small" sx={{ flexShrink: 0 }} />
-                  {prospect.email ? (
+                  {displayProspect.email ? (
                     <Link 
-                      href={`mailto:${prospect.email}`} 
+                      href={`mailto:${displayProspect.email}`} 
                       underline="hover"
                       sx={{ 
                         overflow: 'hidden',
@@ -489,7 +516,7 @@ export default function ProspectDetailModal({ prospect, open, onClose, onStatusU
                         wordBreak: 'break-all'
                       }}
                     >
-                      {prospect.email}
+                      {displayProspect.email}
                     </Link>
                   ) : (
                     <Typography variant="body2" color="text.secondary">N/A</Typography>
@@ -497,7 +524,7 @@ export default function ProspectDetailModal({ prospect, open, onClose, onStatusU
                 </Stack>
                 <Stack direction="row" spacing={1} alignItems="center">
                   <PhoneIcon color="primary" fontSize="small" sx={{ flexShrink: 0 }} />
-                  <Typography variant="body2">{prospect.phone || 'N/A'}</Typography>
+                  <Typography variant="body2">{displayProspect.phone || 'N/A'}</Typography>
                 </Stack>
               </Stack>
             </Grid>
@@ -505,9 +532,9 @@ export default function ProspectDetailModal({ prospect, open, onClose, onStatusU
               <Stack spacing={1.5}>
                 <Stack direction="row" spacing={1} alignItems="center">
                   <LinkedInIcon color="primary" fontSize="small" sx={{ flexShrink: 0 }} />
-                  {prospect.linkedin ? (
+                  {displayProspect.linkedin ? (
                     <Link 
-                      href={prospect.linkedin.startsWith('http') ? prospect.linkedin : `https://${prospect.linkedin}`} 
+                      href={displayProspect.linkedin.startsWith('http') ? displayProspect.linkedin : `https://${displayProspect.linkedin}`} 
                       target="_blank" 
                       underline="hover"
                     >
@@ -519,8 +546,8 @@ export default function ProspectDetailModal({ prospect, open, onClose, onStatusU
                 </Stack>
                 <Stack direction="row" spacing={1} alignItems="center">
                   <LanguageIcon color="primary" fontSize="small" sx={{ flexShrink: 0 }} />
-                  {prospect.website ? (
-                    <Link href={prospect.website} target="_blank" underline="hover">
+                  {displayProspect.website ? (
+                    <Link href={displayProspect.website} target="_blank" underline="hover">
                       Company Website
                     </Link>
                   ) : (
@@ -548,7 +575,7 @@ export default function ProspectDetailModal({ prospect, open, onClose, onStatusU
                 <Stack direction="row" spacing={1} alignItems="center">
                   <PlaceIcon color="primary" fontSize="small" />
                   <Typography>
-                    {prospect.location.city}, {prospect.location.state}
+                    {displayProspect.location.city}, {displayProspect.location.state}
                   </Typography>
                 </Stack>
               </Box>
@@ -558,9 +585,9 @@ export default function ProspectDetailModal({ prospect, open, onClose, onStatusU
                 <Typography variant="subtitle2" color="text.secondary" gutterBottom>
                   Focus Sectors
                 </Typography>
-                {prospect.sectors && prospect.sectors.length > 0 ? (
+                {displayProspect.sectors && displayProspect.sectors.length > 0 ? (
                   <Stack direction="row" spacing={0.5} flexWrap="wrap" sx={{ gap: 0.5 }}>
-                    {prospect.sectors.map((sector, idx) => (
+                    {displayProspect.sectors.map((sector, idx) => (
                       <Chip key={idx} label={sector} size="small" color="primary" variant="outlined" />
                     ))}
                   </Stack>
@@ -574,9 +601,9 @@ export default function ProspectDetailModal({ prospect, open, onClose, onStatusU
                 <Typography variant="subtitle2" color="text.secondary" gutterBottom>
                   Stage Preferences
                 </Typography>
-                {prospect.stagePreferences && prospect.stagePreferences.length > 0 ? (
+                {displayProspect.stagePreferences && displayProspect.stagePreferences.length > 0 ? (
                   <Stack direction="row" spacing={0.5} flexWrap="wrap" sx={{ gap: 0.5 }}>
-                    {prospect.stagePreferences.map((stage, idx) => (
+                    {displayProspect.stagePreferences.map((stage, idx) => (
                       <Chip key={idx} label={stage} size="small" color="primary" />
                     ))}
                   </Stack>
@@ -595,9 +622,9 @@ export default function ProspectDetailModal({ prospect, open, onClose, onStatusU
             Portfolio Companies
           </Typography>
           <Paper variant="outlined" sx={{ p: 2, mb: 3 }}>
-            {prospect.portfolio && prospect.portfolio.length > 0 ? (
+            {displayProspect.portfolio && displayProspect.portfolio.length > 0 ? (
               <Stack direction="row" spacing={1} flexWrap="wrap" sx={{ gap: 1 }}>
-                {prospect.portfolio.map((company, idx) => (
+                {displayProspect.portfolio.map((company, idx) => (
                   <Chip 
                     key={idx} 
                     icon={<BusinessIcon />}
@@ -616,75 +643,185 @@ export default function ProspectDetailModal({ prospect, open, onClose, onStatusU
         <Divider sx={{ my: 3 }} />
 
         {/* Activity Timeline */}
-        <Box>
+        <Box ref={timelineRef}>
           <Typography variant="h6" gutterBottom>
             Activity Timeline
           </Typography>
-          <List dense>
-            {prospect.createdAt && (
-              <ListItem>
-                <ListItemText
-                  primary={`Added to database`}
-                  secondary={(() => {
-                    try {
-                      const date = new Date(prospect.createdAt);
-                      return isNaN(date.getTime()) ? 'N/A' : date.toLocaleDateString();
-                    } catch {
-                      return 'N/A';
-                    }
-                  })()}
-                />
-              </ListItem>
-            )}
-            {prospect.lastEnrichedAt && (
-              <ListItem>
-                <ListItemText
-                  primary={`Last enriched`}
-                  secondary={(() => {
-                    try {
-                      const date = new Date(prospect.lastEnrichedAt);
-                      return isNaN(date.getTime()) ? 'N/A' : date.toLocaleDateString();
-                    } catch {
-                      return 'N/A';
-                    }
-                  })()}
-                />
-              </ListItem>
-            )}
-            {prospect.lastContactedAt && (
-              <ListItem>
-                <ListItemText
-                  primary={`Last contacted`}
-                  secondary={(() => {
-                    try {
-                      const date = new Date(prospect.lastContactedAt);
-                      return isNaN(date.getTime()) ? 'N/A' : date.toLocaleDateString();
-                    } catch {
-                      return 'N/A';
-                    }
-                  })()}
-                />
-              </ListItem>
-            )}
-            <ListItem>
-              <ListItemText
-                primary={`Current status`}
-                secondaryTypographyProps={{ component: 'div' }}
-                secondary={
-                  <Chip 
-                    label={statusLabels[prospect.status]} 
-                    size="small" 
-                    color="primary"
-                    sx={{ mt: 0.5 }}
+          <Box sx={{ position: 'relative', pl: 3, py: 1 }}>
+            {/* Vertical timeline line */}
+            <Box
+              sx={{
+                position: 'absolute',
+                left: 8,
+                top: 0,
+                bottom: 0,
+                width: 2,
+                bgcolor: 'divider',
+                borderRadius: 1
+              }}
+            />
+            
+            <Stack spacing={2}>
+              {displayProspect.createdAt && (
+                <Box sx={{ position: 'relative' }}>
+                  {/* Timeline dot */}
+                  <Box
+                    sx={{
+                      position: 'absolute',
+                      left: -20,
+                      top: 4,
+                      width: 12,
+                      height: 12,
+                      borderRadius: '50%',
+                      bgcolor: 'primary.main',
+                      border: '2px solid',
+                      borderColor: 'background.paper',
+                      zIndex: 1
+                    }}
                   />
-                }
-              />
-            </ListItem>
-          </List>
+                  <Typography variant="body2" fontWeight="500" gutterBottom>
+                    Added to database
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    {(() => {
+                      try {
+                        const date = new Date(displayProspect.createdAt);
+                        return isNaN(date.getTime()) ? 'N/A' : date.toLocaleDateString('en-US', { 
+                          month: 'short', 
+                          day: 'numeric', 
+                          year: 'numeric' 
+                        });
+                      } catch {
+                        return 'N/A';
+                      }
+                    })()}
+                  </Typography>
+                </Box>
+              )}
+              
+              {displayProspect.lastEnrichedAt && (
+                <Box sx={{ position: 'relative' }}>
+                  {/* Timeline dot */}
+                  <Box
+                    sx={{
+                      position: 'absolute',
+                      left: -20,
+                      top: 4,
+                      width: 12,
+                      height: 12,
+                      borderRadius: '50%',
+                      bgcolor: 'info.main',
+                      border: '2px solid',
+                      borderColor: 'background.paper',
+                      zIndex: 1
+                    }}
+                  />
+                  <Typography variant="body2" fontWeight="500" gutterBottom>
+                    Last enriched
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    {(() => {
+                      try {
+                        const date = new Date(displayProspect.lastEnrichedAt);
+                        return isNaN(date.getTime()) ? 'N/A' : date.toLocaleDateString('en-US', { 
+                          month: 'short', 
+                          day: 'numeric', 
+                          year: 'numeric' 
+                        });
+                      } catch {
+                        return 'N/A';
+                      }
+                    })()}
+                  </Typography>
+                </Box>
+              )}
+              
+              {(displayProspect.lastContactedAt || displayProspect.status === 'contacted') && (
+                <Box sx={{ position: 'relative' }}>
+                  {/* Timeline dot */}
+                  <Box
+                    sx={{
+                      position: 'absolute',
+                      left: -20,
+                      top: 4,
+                      width: 12,
+                      height: 12,
+                      borderRadius: '50%',
+                      bgcolor: 'success.main',
+                      border: '2px solid',
+                      borderColor: 'background.paper',
+                      zIndex: 1
+                    }}
+                  />
+                  <Typography variant="body2" fontWeight="500" gutterBottom>
+                    Last contacted
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    {(() => {
+                      try {
+                        if (displayProspect.lastContactedAt) {
+                          const date = new Date(displayProspect.lastContactedAt);
+                          if (!isNaN(date.getTime())) {
+                            return date.toLocaleDateString('en-US', { 
+                              month: 'short', 
+                              day: 'numeric', 
+                              year: 'numeric' 
+                            });
+                          }
+                        }
+                        // If no lastContactedAt but status is contacted, show "Just now" or current date
+                        return new Date().toLocaleDateString('en-US', { 
+                          month: 'short', 
+                          day: 'numeric', 
+                          year: 'numeric' 
+                        });
+                      } catch {
+                        return 'N/A';
+                      }
+                    })()}
+                  </Typography>
+                </Box>
+              )}
+              
+              {/* Current status - always shown */}
+              <Box sx={{ position: 'relative' }}>
+                {/* Timeline dot */}
+                <Box
+                  sx={{
+                    position: 'absolute',
+                    left: -20,
+                    top: 4,
+                    width: 12,
+                    height: 12,
+                    borderRadius: '50%',
+                    bgcolor: displayProspect.status === 'contacted' ? 'success.main' : 
+                             displayProspect.status === 'interested' ? 'info.main' : 
+                             displayProspect.status === 'not_interested' ? 'error.main' : 'primary.main',
+                    border: '2px solid',
+                    borderColor: 'background.paper',
+                    zIndex: 1
+                  }}
+                />
+                <Typography variant="body2" fontWeight="500" gutterBottom>
+                  Current status
+                </Typography>
+                <Chip 
+                  label={statusLabels[displayProspect.status]} 
+                  size="small" 
+                  color={
+                    displayProspect.status === 'contacted' ? 'success' : 
+                    displayProspect.status === 'interested' ? 'info' : 
+                    displayProspect.status === 'not_interested' ? 'error' : 'primary'
+                  }
+                  sx={{ mt: 0.5 }}
+                />
+              </Box>
+            </Stack>
+          </Box>
         </Box>
 
         {/* Notes Section - Only show if notes exist */}
-        {prospect.notes && (
+        {displayProspect.notes && (
           <>
             <Divider sx={{ my: 3 }} />
             <Box>
@@ -704,7 +841,7 @@ export default function ProspectDetailModal({ prospect, open, onClose, onStatusU
                 }}
               >
                 <Typography variant="body2" color="text.secondary">
-                  {prospect.notes}
+                  {displayProspect.notes}
                 </Typography>
               </Paper>
             </Box>
@@ -742,7 +879,7 @@ export default function ProspectDetailModal({ prospect, open, onClose, onStatusU
           setEmailModalOpen(false)
           setGeneratedEmail(null)
         }}
-        prospect={prospect}
+        prospect={displayProspect}
         initialEmail={generatedEmail}
         onSend={handleEmailSend}
       />
