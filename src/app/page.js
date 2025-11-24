@@ -16,7 +16,8 @@ import {
   Assessment as AssessmentIcon,
   Upload as UploadIcon,
   Timeline as TimelineIcon,
-  ArrowForward as ArrowForwardIcon
+  ArrowForward as ArrowForwardIcon,
+  AutoAwesome as AutoAwesomeIcon
 } from '@mui/icons-material'
 
 export default function Home() {
@@ -144,6 +145,14 @@ export default function Home() {
             href="/dashboard"
           >
             View Dashboard
+          </Button>
+          <Button 
+            variant="outlined" 
+            size="large"
+            startIcon={<AutoAwesomeIcon />}
+            href="/ai-solutions"
+          >
+            AI Solutions
           </Button>
           <Button 
             variant="outlined" 

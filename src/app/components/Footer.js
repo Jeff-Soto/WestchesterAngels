@@ -44,6 +44,9 @@ export default function Footer() {
               <Link href="/dashboard" underline="hover" sx={{ color: '#A5A5A5', '&:hover': { color: '#14E2BA' } }}>
                 Dashboard
               </Link>
+              <Link href="/ai-solutions" underline="hover" sx={{ color: '#A5A5A5', '&:hover': { color: '#14E2BA' } }}>
+                AI Solutions
+              </Link>
               <Link href="/login" underline="hover" sx={{ color: '#A5A5A5', '&:hover': { color: '#14E2BA' } }}>
                 Login
               </Link>
