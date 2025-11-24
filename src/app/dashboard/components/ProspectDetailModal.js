@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import {
   Dialog,
   DialogTitle,
@@ -38,14 +38,98 @@ import {
 } from '@mui/icons-material'
 import { statusLabels } from '@/lib/mockData'
 import EmailComposeModal from './EmailComposeModal'
+import { generateMatchReasons } from '@/lib/utils/matchReasons'
+import { estimateDistanceFromNYC, getDistanceDescription, getMetroScore } from '@/lib/utils/distance'
+import { calculateRelevanceScore } from '@/lib/filtering/relevanceFilter'
+import { parseMarkdown } from '@/lib/utils/parseMarkdown'
 
 export default function ProspectDetailModal({ prospect, open, onClose, onStatusUpdate, onEmailSent }) {
   const [emailModalOpen, setEmailModalOpen] = useState(false)
   const [generatingEmail, setGeneratingEmail] = useState(false)
   const [emailError, setEmailError] = useState(null)
   const [generatedEmail, setGeneratedEmail] = useState(null)
+  const [aiExplanation, setAiExplanation] = useState(prospect?.aiMatchExplanation || null)
+  const [generatingExplanation, setGeneratingExplanation] = useState(false)
+  const [researchNotes, setResearchNotes] = useState(prospect?.researchNotes || null)
+  const [generatingResearch, setGeneratingResearch] = useState(false)
+  const [portfolioAnalysis, setPortfolioAnalysis] = useState(prospect?.portfolioAnalysis || null)
   const theme = useTheme()
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'))
+  
+  // Clear error and email state when modal closes
+  useEffect(() => {
+    if (!open) {
+      setEmailError(null)
+      setGeneratedEmail(null)
+      setGeneratingEmail(false)
+      setEmailModalOpen(false)
+    }
+  }, [open])
+
+  // Update AI data when prospect changes
+  useEffect(() => {
+    if (prospect) {
+      setAiExplanation(prospect.aiMatchExplanation || null)
+      setResearchNotes(prospect.researchNotes || null)
+      setPortfolioAnalysis(prospect.portfolioAnalysis || null)
+    }
+  }, [prospect])
+
+  const handleGenerateAIExplanation = async () => {
+    setGeneratingExplanation(true)
+    try {
+      const response = await fetch('/api/ai/match-explanation', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          prospectId: prospect.id
+        })
+      })
+
+      const result = await response.json()
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.error || 'Failed to generate AI explanation')
+      }
+
+      setAiExplanation(result.data.explanation)
+    } catch (error) {
+      console.error('Error generating AI explanation:', error)
+      setEmailError(error.message || 'Failed to generate AI explanation')
+    } finally {
+      setGeneratingExplanation(false)
+    }
+  }
+
+  const handleResearchProspect = async () => {
+    setGeneratingResearch(true)
+    try {
+      const response = await fetch('/api/ai/research', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          prospectId: prospect.id
+        })
+      })
+
+      const result = await response.json()
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.error || 'Failed to research prospect')
+      }
+
+      setResearchNotes(result.data.researchNotes)
+    } catch (error) {
+      console.error('Error researching prospect:', error)
+      setEmailError(error.message || 'Failed to research prospect')
+    } finally {
+      setGeneratingResearch(false)
+    }
+  }
   
   if (!prospect) return null
 
@@ -102,16 +186,14 @@ export default function ProspectDetailModal({ prospect, open, onClose, onStatusU
     if (score >= 80) return 'primary'
     if (score >= 70) return 'info'
     if (score >= 60) return 'warning'
-    return 'default'
+    return 'error' // Use error color for low scores to make them more visible
   }
 
-  // Calculate feature scores (simulated breakdown)
+  // Calculate feature scores based on actual prospect data
   const featureScores = {
-    sectorMatch: Math.min(100, prospect.fitScore + Math.random() * 10 - 5),
-    geoProximity: ['NY', 'NJ', 'CT'].includes(prospect.location.state) ? 100 : 60,
-    stageMatch: prospect.stagePreferences.includes('Seed') || prospect.stagePreferences.includes('Series A') ? 100 : 75,
-    checkSizeMatch: 95,
-    recentActivity: 85
+    geoProximity: ['NY', 'NJ', 'CT', 'PA'].includes(prospect.location?.state || prospect.hqState) ? 100 : 60,
+    stageMatch: (prospect.stagePreferences || []).some(s => ['Seed', 'Series A', 'Pre-Seed'].includes(s)) ? 100 : 75,
+    recentActivity: prospect.lastContactedAt ? 85 : (prospect.updatedAt ? 70 : 50)
   }
 
   return (
@@ -149,18 +231,28 @@ export default function ProspectDetailModal({ prospect, open, onClose, onStatusU
           >
             <Box
               sx={{
-                width: { xs: 70, sm: 80 },
-                height: { xs: 70, sm: 80 },
+                width: { xs: 80, sm: 90 },
+                height: { xs: 80, sm: 90 },
                 borderRadius: '50%',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 bgcolor: 'primary.main',
                 color: 'white',
-                flexShrink: 0
+                flexShrink: 0,
+                padding: { xs: 1, sm: 1.5 }
               }}
             >
-              <Typography variant="h3" fontWeight="bold" sx={{ fontSize: { xs: '2rem', sm: '3rem' } }}>
+              <Typography 
+                variant="h3" 
+                fontWeight="bold" 
+                sx={{ 
+                  fontSize: prospect.fitScore >= 100 
+                    ? { xs: '1.75rem', sm: '2.5rem' }
+                    : { xs: '2rem', sm: '3rem' },
+                  lineHeight: 1
+                }}
+              >
                 {prospect.fitScore}
               </Typography>
             </Box>
@@ -180,10 +272,8 @@ export default function ProspectDetailModal({ prospect, open, onClose, onStatusU
           </Typography>
           <Stack spacing={1.5}>
             {[
-              { label: 'Sector Match', value: featureScores.sectorMatch },
               { label: 'Geographic Proximity', value: featureScores.geoProximity },
               { label: 'Stage Match', value: featureScores.stageMatch },
-              { label: 'Check Size Match', value: featureScores.checkSizeMatch },
               { label: 'Recent Activity', value: featureScores.recentActivity }
             ].map((feature, idx) => (
               <Box key={idx}>
@@ -195,13 +285,189 @@ export default function ProspectDetailModal({ prospect, open, onClose, onStatusU
                 </Stack>
                 <LinearProgress 
                   variant="determinate" 
-                  value={feature.value}
+                  value={Math.max(1, feature.value)} // Ensure at least 1% so bar is visible
                   color={getScoreColor(feature.value)}
+                  sx={{
+                    height: 8,
+                    borderRadius: 4,
+                    backgroundColor: 'rgba(0, 0, 0, 0.1)',
+                    '& .MuiLinearProgress-bar': {
+                      borderRadius: 4,
+                    }
+                  }}
                 />
               </Box>
             ))}
           </Stack>
         </Paper>
+
+        {/* Why They Match Section */}
+        {prospect.hqState && (
+          <Paper sx={{ p: { xs: 2, sm: 3 }, mb: 3, bgcolor: 'success.light', color: 'success.contrastText' }}>
+            <Stack direction="row" spacing={1} alignItems="center" justifyContent="space-between" mb={2}>
+              <Stack direction="row" spacing={1} alignItems="center">
+                <InfoIcon />
+                <Typography variant="h6" fontWeight="bold">
+                  Why This Investor Is A Match
+                </Typography>
+              </Stack>
+              {!aiExplanation && (
+                <Button
+                  size="small"
+                  variant="outlined"
+                  onClick={handleGenerateAIExplanation}
+                  disabled={generatingExplanation}
+                  startIcon={generatingExplanation ? <CircularProgress size={16} /> : null}
+                  sx={{ 
+                    bgcolor: 'rgba(255, 255, 255, 0.2)',
+                    color: 'inherit',
+                    borderColor: 'rgba(255, 255, 255, 0.5)',
+                    '&:hover': {
+                      bgcolor: 'rgba(255, 255, 255, 0.3)',
+                      borderColor: 'rgba(255, 255, 255, 0.7)'
+                    }
+                  }}
+                >
+                  {generatingExplanation ? 'Generating...' : '🤖 AI Analysis'}
+                </Button>
+              )}
+            </Stack>
+            <Stack spacing={1.5}>
+              {generateMatchReasons({ ...prospect, aiMatchExplanation: aiExplanation }).map((reason, idx) => (
+                <Stack 
+                  key={idx} 
+                  direction="row" 
+                  spacing={1.5} 
+                  alignItems="flex-start"
+                  sx={{
+                    p: 1.5,
+                    borderRadius: 1,
+                    bgcolor: reason.highlight ? 'rgba(255, 255, 255, 0.2)' : 'rgba(255, 255, 255, 0.1)',
+                    border: reason.highlight ? '1px solid rgba(255, 255, 255, 0.3)' : 'none'
+                  }}
+                >
+                  <Typography variant="h6" sx={{ fontSize: '1.2rem', lineHeight: 1 }}>
+                    {reason.icon}
+                  </Typography>
+                  <Typography variant="body2" sx={{ flex: 1, fontWeight: reason.highlight ? 600 : 400 }}>
+                    {reason.text}
+                  </Typography>
+                </Stack>
+              ))}
+            </Stack>
+            
+            {/* Distance and Metro Score */}
+            {prospect.hqState && (prospect.hqState === 'NY' || prospect.hqState === 'NJ' || prospect.hqState === 'CT' || prospect.hqState === 'PA') && (
+              <Box sx={{ mt: 2, pt: 2, borderTop: '1px solid rgba(255, 255, 255, 0.2)' }}>
+                <Stack direction="row" spacing={2} alignItems="center">
+                  <PlaceIcon fontSize="small" />
+                  <Typography variant="body2">
+                    {prospect.hqCity || 'Location'}, {prospect.hqState}
+                    {(() => {
+                      const distance = estimateDistanceFromNYC(prospect.hqState, prospect.hqCity);
+                      return distance !== null ? ` (${getDistanceDescription(distance)})` : '';
+                    })()}
+                  </Typography>
+                  <Chip 
+                    label={`Metro Score: ${getMetroScore(estimateDistanceFromNYC(prospect.hqState, prospect.hqCity))}`}
+                    size="small"
+                    sx={{ 
+                      bgcolor: 'rgba(255, 255, 255, 0.3)',
+                      color: 'inherit',
+                      fontWeight: 600
+                    }}
+                  />
+                </Stack>
+              </Box>
+            )}
+          </Paper>
+        )}
+
+        {/* Portfolio Analysis */}
+        {portfolioAnalysis && (
+          <Paper sx={{ p: { xs: 2, sm: 3 }, mb: 3, bgcolor: 'info.light', color: 'info.contrastText' }}>
+            <Stack direction="row" spacing={1} alignItems="center" mb={2}>
+              <TrendingUpIcon />
+              <Typography variant="h6" fontWeight="bold">
+                Portfolio Analysis
+              </Typography>
+            </Stack>
+            {portfolioAnalysis.insights && (
+              <Typography variant="body2" sx={{ mb: 2 }}>
+                {portfolioAnalysis.insights}
+              </Typography>
+            )}
+            {portfolioAnalysis.commonCharacteristics && portfolioAnalysis.commonCharacteristics.length > 0 && (
+              <Box sx={{ mb: 2 }}>
+                <Typography variant="subtitle2" sx={{ mb: 1 }}>Common Characteristics:</Typography>
+                <Stack direction="row" spacing={0.5} flexWrap="wrap" sx={{ gap: 0.5 }}>
+                  {portfolioAnalysis.commonCharacteristics.map((char, idx) => (
+                    <Chip key={idx} label={char} size="small" sx={{ bgcolor: 'rgba(255, 255, 255, 0.2)' }} />
+                  ))}
+                </Stack>
+              </Box>
+            )}
+            {portfolioAnalysis.sectorFocus && (
+              <Typography variant="body2">
+                <strong>Sector Focus:</strong> {portfolioAnalysis.sectorFocus}
+              </Typography>
+            )}
+          </Paper>
+        )}
+
+        {/* Investment Thesis */}
+        {prospect.investmentThesis && (
+          <Paper sx={{ p: { xs: 2, sm: 3 }, mb: 3, bgcolor: 'primary.light', color: 'primary.contrastText' }}>
+            <Stack direction="row" spacing={1} alignItems="center" mb={2}>
+              <InfoIcon />
+              <Typography variant="h6" fontWeight="bold">
+                Investment Thesis
+              </Typography>
+            </Stack>
+            <Typography variant="body2">
+              {prospect.investmentThesis}
+            </Typography>
+          </Paper>
+        )}
+
+        {/* Research Notes */}
+        {researchNotes && (
+          <Paper sx={{ p: { xs: 2, sm: 3 }, mb: 3, bgcolor: 'background.default' }}>
+            <Stack direction="row" spacing={1} alignItems="center" justifyContent="space-between" mb={2}>
+              <Stack direction="row" spacing={1} alignItems="center">
+                <InfoIcon color="primary" />
+                <Typography variant="h6" fontWeight="bold">
+                  Research Notes
+                </Typography>
+              </Stack>
+              <Button
+                size="small"
+                variant="outlined"
+                onClick={handleResearchProspect}
+                disabled={generatingResearch}
+                startIcon={generatingResearch ? <CircularProgress size={16} /> : null}
+              >
+                {generatingResearch ? 'Researching...' : '🔄 Refresh'}
+              </Button>
+            </Stack>
+            <Box>
+              {parseMarkdown(researchNotes)}
+            </Box>
+          </Paper>
+        )}
+        {!researchNotes && (
+          <Box sx={{ mb: 3 }}>
+            <Button
+              variant="outlined"
+              onClick={handleResearchProspect}
+              disabled={generatingResearch}
+              startIcon={generatingResearch ? <CircularProgress size={16} /> : <InfoIcon />}
+              fullWidth
+            >
+              {generatingResearch ? 'Researching Prospect...' : '🤖 Generate Research Notes'}
+            </Button>
+          </Box>
+        )}
 
         {/* Contact Information */}
         <Box>
@@ -213,21 +479,25 @@ export default function ProspectDetailModal({ prospect, open, onClose, onStatusU
               <Stack spacing={1.5}>
                 <Stack direction="row" spacing={1} alignItems="center">
                   <EmailIcon color="primary" fontSize="small" sx={{ flexShrink: 0 }} />
-                  <Link 
-                    href={`mailto:${prospect.email}`} 
-                    underline="hover"
-                    sx={{ 
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      wordBreak: 'break-all'
-                    }}
-                  >
-                    {prospect.email}
-                  </Link>
+                  {prospect.email ? (
+                    <Link 
+                      href={`mailto:${prospect.email}`} 
+                      underline="hover"
+                      sx={{ 
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        wordBreak: 'break-all'
+                      }}
+                    >
+                      {prospect.email}
+                    </Link>
+                  ) : (
+                    <Typography variant="body2" color="text.secondary">N/A</Typography>
+                  )}
                 </Stack>
                 <Stack direction="row" spacing={1} alignItems="center">
                   <PhoneIcon color="primary" fontSize="small" sx={{ flexShrink: 0 }} />
-                  <Typography variant="body2">{prospect.phone}</Typography>
+                  <Typography variant="body2">{prospect.phone || 'N/A'}</Typography>
                 </Stack>
               </Stack>
             </Grid>
@@ -235,15 +505,27 @@ export default function ProspectDetailModal({ prospect, open, onClose, onStatusU
               <Stack spacing={1.5}>
                 <Stack direction="row" spacing={1} alignItems="center">
                   <LinkedInIcon color="primary" fontSize="small" sx={{ flexShrink: 0 }} />
-                  <Link href={`https://${prospect.linkedin}`} target="_blank" underline="hover">
-                    LinkedIn Profile
-                  </Link>
+                  {prospect.linkedin ? (
+                    <Link 
+                      href={prospect.linkedin.startsWith('http') ? prospect.linkedin : `https://${prospect.linkedin}`} 
+                      target="_blank" 
+                      underline="hover"
+                    >
+                      LinkedIn Profile
+                    </Link>
+                  ) : (
+                    <Typography variant="body2" color="text.secondary">N/A</Typography>
+                  )}
                 </Stack>
                 <Stack direction="row" spacing={1} alignItems="center">
                   <LanguageIcon color="primary" fontSize="small" sx={{ flexShrink: 0 }} />
-                  <Link href={prospect.website} target="_blank" underline="hover">
-                    Company Website
-                  </Link>
+                  {prospect.website ? (
+                    <Link href={prospect.website} target="_blank" underline="hover">
+                      Company Website
+                    </Link>
+                  ) : (
+                    <Typography variant="body2" color="text.secondary">N/A</Typography>
+                  )}
                 </Stack>
               </Stack>
             </Grid>
@@ -274,23 +556,17 @@ export default function ProspectDetailModal({ prospect, open, onClose, onStatusU
             <Grid size={{ xs: 12, sm: 6 }}>
               <Box>
                 <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-                  Check Size Range
-                </Typography>
-                <Typography>
-                  ${(prospect.checkSize.min / 1000).toFixed(0)}K - ${(prospect.checkSize.max / 1000000).toFixed(1)}M
-                </Typography>
-              </Box>
-            </Grid>
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <Box>
-                <Typography variant="subtitle2" color="text.secondary" gutterBottom>
                   Focus Sectors
                 </Typography>
-                <Stack direction="row" spacing={0.5} flexWrap="wrap" sx={{ gap: 0.5 }}>
-                  {prospect.sectors.map((sector, idx) => (
-                    <Chip key={idx} label={sector} size="small" color="primary" variant="outlined" />
-                  ))}
-                </Stack>
+                {prospect.sectors && prospect.sectors.length > 0 ? (
+                  <Stack direction="row" spacing={0.5} flexWrap="wrap" sx={{ gap: 0.5 }}>
+                    {prospect.sectors.map((sector, idx) => (
+                      <Chip key={idx} label={sector} size="small" color="primary" variant="outlined" />
+                    ))}
+                  </Stack>
+                ) : (
+                  <Typography variant="body2" color="text.secondary">N/A</Typography>
+                )}
               </Box>
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
@@ -298,35 +574,42 @@ export default function ProspectDetailModal({ prospect, open, onClose, onStatusU
                 <Typography variant="subtitle2" color="text.secondary" gutterBottom>
                   Stage Preferences
                 </Typography>
-                <Stack direction="row" spacing={0.5} flexWrap="wrap" sx={{ gap: 0.5 }}>
-                  {prospect.stagePreferences.map((stage, idx) => (
-                    <Chip key={idx} label={stage} size="small" color="primary" />
-                  ))}
-                </Stack>
+                {prospect.stagePreferences && prospect.stagePreferences.length > 0 ? (
+                  <Stack direction="row" spacing={0.5} flexWrap="wrap" sx={{ gap: 0.5 }}>
+                    {prospect.stagePreferences.map((stage, idx) => (
+                      <Chip key={idx} label={stage} size="small" color="primary" />
+                    ))}
+                  </Stack>
+                ) : (
+                  <Typography variant="body2" color="text.secondary">N/A</Typography>
+                )}
               </Box>
             </Grid>
           </Grid>
         </Box>
 
-        <Divider sx={{ my: 3 }} />
-
         {/* Portfolio Companies */}
+        <Divider sx={{ my: 3 }} />
         <Box>
           <Typography variant="h6" gutterBottom>
             Portfolio Companies
           </Typography>
           <Paper variant="outlined" sx={{ p: 2, mb: 3 }}>
-            <Stack direction="row" spacing={1} flexWrap="wrap" sx={{ gap: 1 }}>
-              {prospect.portfolio.map((company, idx) => (
-                <Chip 
-                  key={idx} 
-                  icon={<BusinessIcon />}
-                  label={company} 
-                  size="small" 
-                  variant="outlined"
-                />
-              ))}
-            </Stack>
+            {prospect.portfolio && prospect.portfolio.length > 0 ? (
+              <Stack direction="row" spacing={1} flexWrap="wrap" sx={{ gap: 1 }}>
+                {prospect.portfolio.map((company, idx) => (
+                  <Chip 
+                    key={idx} 
+                    icon={<BusinessIcon />}
+                    label={company} 
+                    size="small" 
+                    variant="outlined"
+                  />
+                ))}
+              </Stack>
+            ) : (
+              <Typography variant="body2" color="text.secondary">N/A</Typography>
+            )}
           </Paper>
         </Box>
 
@@ -338,23 +621,48 @@ export default function ProspectDetailModal({ prospect, open, onClose, onStatusU
             Activity Timeline
           </Typography>
           <List dense>
-            <ListItem>
-              <ListItemText
-                primary={`Added to database`}
-                secondary={new Date(prospect.createdAt).toLocaleDateString()}
-              />
-            </ListItem>
-            <ListItem>
-              <ListItemText
-                primary={`Last enriched`}
-                secondary={new Date(prospect.lastEnrichedAt).toLocaleDateString()}
-              />
-            </ListItem>
+            {prospect.createdAt && (
+              <ListItem>
+                <ListItemText
+                  primary={`Added to database`}
+                  secondary={(() => {
+                    try {
+                      const date = new Date(prospect.createdAt);
+                      return isNaN(date.getTime()) ? 'N/A' : date.toLocaleDateString();
+                    } catch {
+                      return 'N/A';
+                    }
+                  })()}
+                />
+              </ListItem>
+            )}
+            {prospect.lastEnrichedAt && (
+              <ListItem>
+                <ListItemText
+                  primary={`Last enriched`}
+                  secondary={(() => {
+                    try {
+                      const date = new Date(prospect.lastEnrichedAt);
+                      return isNaN(date.getTime()) ? 'N/A' : date.toLocaleDateString();
+                    } catch {
+                      return 'N/A';
+                    }
+                  })()}
+                />
+              </ListItem>
+            )}
             {prospect.lastContactedAt && (
               <ListItem>
                 <ListItemText
                   primary={`Last contacted`}
-                  secondary={new Date(prospect.lastContactedAt).toLocaleDateString()}
+                  secondary={(() => {
+                    try {
+                      const date = new Date(prospect.lastContactedAt);
+                      return isNaN(date.getTime()) ? 'N/A' : date.toLocaleDateString();
+                    } catch {
+                      return 'N/A';
+                    }
+                  })()}
                 />
               </ListItem>
             )}

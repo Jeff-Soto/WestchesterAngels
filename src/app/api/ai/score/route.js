@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
-import { generateInvestorEmail } from '@/lib/openai'
+import { generateAIScore } from '@/lib/ai/enrichment'
+import { calculateRelevanceScore } from '@/lib/filtering/relevanceFilter'
 import { connectToDatabase } from '@/lib/mongodb'
 import { transformProspectForDashboard } from '@/lib/utils/transformProspect'
 
@@ -18,6 +19,16 @@ export async function POST(request) {
       )
     }
 
+    if (!process.env.OPENAI_API_KEY) {
+      return NextResponse.json(
+        { 
+          success: false, 
+          error: 'OpenAI API key is not configured' 
+        },
+        { status: 500 }
+      )
+    }
+
     // Fetch prospect from MongoDB
     if (!process.env.MONGODB_URI) {
       return NextResponse.json(
@@ -32,7 +43,6 @@ export async function POST(request) {
     const db = await connectToDatabase()
     const collection = db.collection('prospects')
     
-    // Find prospect by id (can be string or number)
     const dbProspect = await collection.findOne({ 
       $or: [
         { id: prospectId },
@@ -54,35 +64,29 @@ export async function POST(request) {
     // Transform to dashboard format
     const prospect = transformProspectForDashboard(dbProspect)
 
-    // Check if OpenAI API key is configured
-    if (!process.env.OPENAI_API_KEY) {
-      return NextResponse.json(
-        { 
-          success: false, 
-          error: 'OpenAI API key is not configured' 
-        },
-        { status: 500 }
-      )
-    }
+    // Calculate rule-based score first
+    const ruleBasedScore = calculateRelevanceScore(dbProspect)
 
-    // Generate email using OpenAI
-    const emailData = await generateInvestorEmail(prospect)
+    // Generate AI score
+    const aiScore = await generateAIScore(prospect, ruleBasedScore)
 
     return NextResponse.json({
       success: true,
       data: {
         prospectId: prospect.id,
-        prospectName: prospect.name,
-        prospectOrg: prospect.org,
-        ...emailData
+        ruleBasedScore,
+        aiScore: aiScore.score,
+        blendedScore: aiScore.score, // Already blended in the function
+        reasoning: aiScore.reasoning,
+        confidence: aiScore.confidence
       }
     })
   } catch (error) {
-    console.error('Error generating email:', error)
+    console.error('Error generating AI score:', error)
     return NextResponse.json(
       { 
         success: false, 
-        error: 'Failed to generate email',
+        error: 'Failed to generate AI score',
         message: error.message 
       },
       { status: 500 }

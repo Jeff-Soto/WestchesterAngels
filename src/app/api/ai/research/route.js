@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { generateInvestorEmail } from '@/lib/openai'
+import { researchProspect } from '@/lib/ai/enrichment'
 import { connectToDatabase } from '@/lib/mongodb'
 import { transformProspectForDashboard } from '@/lib/utils/transformProspect'
 
@@ -18,6 +18,16 @@ export async function POST(request) {
       )
     }
 
+    if (!process.env.OPENAI_API_KEY) {
+      return NextResponse.json(
+        { 
+          success: false, 
+          error: 'OpenAI API key is not configured' 
+        },
+        { status: 500 }
+      )
+    }
+
     // Fetch prospect from MongoDB
     if (!process.env.MONGODB_URI) {
       return NextResponse.json(
@@ -32,7 +42,6 @@ export async function POST(request) {
     const db = await connectToDatabase()
     const collection = db.collection('prospects')
     
-    // Find prospect by id (can be string or number)
     const dbProspect = await collection.findOne({ 
       $or: [
         { id: prospectId },
@@ -54,35 +63,35 @@ export async function POST(request) {
     // Transform to dashboard format
     const prospect = transformProspectForDashboard(dbProspect)
 
-    // Check if OpenAI API key is configured
-    if (!process.env.OPENAI_API_KEY) {
-      return NextResponse.json(
+    // Research prospect
+    const researchNotes = await researchProspect(prospect)
+
+    if (researchNotes) {
+      // Save research notes to database
+      await collection.updateOne(
+        { _id: dbProspect._id },
         { 
-          success: false, 
-          error: 'OpenAI API key is not configured' 
-        },
-        { status: 500 }
+          $set: { 
+            researchNotes: researchNotes,
+            lastResearchedAt: new Date()
+          } 
+        }
       )
     }
-
-    // Generate email using OpenAI
-    const emailData = await generateInvestorEmail(prospect)
 
     return NextResponse.json({
       success: true,
       data: {
         prospectId: prospect.id,
-        prospectName: prospect.name,
-        prospectOrg: prospect.org,
-        ...emailData
+        researchNotes
       }
     })
   } catch (error) {
-    console.error('Error generating email:', error)
+    console.error('Error researching prospect:', error)
     return NextResponse.json(
       { 
         success: false, 
-        error: 'Failed to generate email',
+        error: 'Failed to research prospect',
         message: error.message 
       },
       { status: 500 }

@@ -592,17 +592,25 @@ export function calculateStats(prospects) {
 export function getFilterOptions(prospects) {
   const allSectors = new Set()
   const allStates = new Set()
+  const allCities = new Set() // Store as "City, State" format
   const allStatuses = new Set()
   
   prospects.forEach(prospect => {
     prospect.sectors.forEach(sector => allSectors.add(sector))
-    allStates.add(prospect.location.state)
+    if (prospect.location.state) {
+      allStates.add(prospect.location.state)
+    }
+    // Add city as "City, State" format for filtering
+    if (prospect.location.city && prospect.location.state) {
+      allCities.add(`${prospect.location.city}, ${prospect.location.state}`)
+    }
     allStatuses.add(prospect.status)
   })
   
   return {
     sectors: Array.from(allSectors).sort(),
     states: Array.from(allStates).sort(),
+    cities: Array.from(allCities).sort(), // Sorted list of "City, State" strings
     statuses: Array.from(allStatuses).sort()
   }
 }
