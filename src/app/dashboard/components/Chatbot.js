@@ -26,7 +26,7 @@ export default function Chatbot() {
   const [messages, setMessages] = useState([
     {
       role: 'assistant',
-      content: "Hi! I'm your AI assistant for the Westchester Angels Investor Prospecting Engine. I can help you understand how to use the system, find investors, use AI features, and more. What would you like to know?"
+      content: "Hi! I’m your AI Agent for the Westchester Angels Investor Platform. I can help you find and analyze investors, explain fit scores, generate outreach, and guide you through all AI-powered features. What would you like to do?"
     }
   ])
   const [input, setInput] = useState('')

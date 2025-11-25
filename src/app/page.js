@@ -33,7 +33,7 @@ export default function Home() {
             mb: 2
           }}
         >
-          AI Investor Prospecting Engine
+          AI Investor Acquisition Agent
         </Typography>
         
         <Typography 
@@ -42,7 +42,7 @@ export default function Home() {
           gutterBottom
           sx={{ mb: 6 }}
         >
-          Discover, verify, and prioritize prospective investors using multi-source data and AI
+          Your intelligent AI Agent for enriching, scoring, and engaging high-value prospective investors.
         </Typography>
       </Box>
 
@@ -52,10 +52,11 @@ export default function Home() {
             <CardContent sx={{ textAlign: 'center', py: 4 }}>
               <UploadIcon sx={{ fontSize: 48, color: 'primary.main', mb: 2 }} />
               <Typography variant="h5" component="h2" gutterBottom>
-                CSV Import & Normalization
+                CSV Intake & Enrichment Agent
               </Typography>
               <Typography color="text.secondary">
-                Upload investor data from multiple sources. Automatic normalization and data enrichment with flexible column mapping
+                Upload investor lists from OpenVC, AngelMatch, spreadsheets, or internal sources. AI automatically
+                normalizes fields, enriches missing info, and standardizes data for high-quality analysis.
               </Typography>
             </CardContent>
           </Card>
@@ -66,10 +67,11 @@ export default function Home() {
             <CardContent sx={{ textAlign: 'center', py: 4 }}>
               <SmartToyIcon sx={{ fontSize: 48, color: 'primary.main', mb: 2 }} />
               <Typography variant="h5" component="h2" gutterBottom>
-                AI-Powered Scoring
+                AI Scoring & Relevance Agent
               </Typography>
               <Typography color="text.secondary">
-                Intelligent relevance scoring (0-100) based on geography, investor type, stage preferences, and contactability
+                Intelligent fit scoring (0–100) based on geography, investor type, stage preferences, sector alignment,
+                and contactability, with reasoning that explains why each investor is a strong match.
               </Typography>
             </CardContent>
           </Card>
@@ -80,10 +82,11 @@ export default function Home() {
             <CardContent sx={{ textAlign: 'center', py: 4 }}>
               <FilterListIcon sx={{ fontSize: 48, color: 'primary.main', mb: 2 }} />
               <Typography variant="h5" component="h2" gutterBottom>
-                Advanced Filtering
+                AI Search & Filtering Agent
               </Typography>
               <Typography color="text.secondary">
-                Filter by status, sectors, location, fit score, and more. Semantic search for natural language queries
+                Filter by status, sector, location, fit score, and more. Use semantic search to ask natural-language
+                queries like “NYC fintech investors with recent activity.”
               </Typography>
             </CardContent>
           </Card>
@@ -94,10 +97,11 @@ export default function Home() {
             <CardContent sx={{ textAlign: 'center', py: 4 }}>
               <EmailIcon sx={{ fontSize: 48, color: 'primary.main', mb: 2 }} />
               <Typography variant="h5" component="h2" gutterBottom>
-                AI Email Generation
+                AI Outreach Agent
               </Typography>
               <Typography color="text.secondary">
-                Generate personalized outreach emails with AI-powered match explanations and prospect insights
+                Generate personalized email and LinkedIn outreach tailored to each investor’s background, portfolio,
+                and focus areas—saving hours of manual research and drafting.
               </Typography>
             </CardContent>
           </Card>
@@ -108,10 +112,11 @@ export default function Home() {
             <CardContent sx={{ textAlign: 'center', py: 4 }}>
               <AssessmentIcon sx={{ fontSize: 48, color: 'primary.main', mb: 2 }} />
               <Typography variant="h5" component="h2" gutterBottom>
-                Portfolio Analysis
+                AI Portfolio Insights Agent
               </Typography>
               <Typography color="text.secondary">
-                AI-powered analysis of investment patterns, sector focus, and portfolio characteristics
+                Analyze past investments to spot patterns in sectors, geographies, and deal profiles, helping refine
+                your investor acquisition and dealflow strategy.
               </Typography>
             </CardContent>
           </Card>
@@ -122,10 +127,11 @@ export default function Home() {
             <CardContent sx={{ textAlign: 'center', py: 4 }}>
               <TimelineIcon sx={{ fontSize: 48, color: 'primary.main', mb: 2 }} />
               <Typography variant="h5" component="h2" gutterBottom>
-                Activity Tracking
+                Activity & Pipeline Tracking Agent
               </Typography>
               <Typography color="text.secondary">
-                Track prospect status, contact history, and engagement timeline with visual activity logs
+                Track prospect status, outreach history, replies, and conversions with a visual timeline from “New”
+                to “Contacted” to “Interested.”
               </Typography>
             </CardContent>
           </Card>

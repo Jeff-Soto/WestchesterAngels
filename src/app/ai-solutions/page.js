@@ -47,12 +47,12 @@ const solutions = [
     items: [
       {
         title: 'AI Startup Application Screener',
-        description: 'Automatically ingests GUST applications, extracts key information (market size, traction, founders, metrics), and scores startups based on your criteria. Flags top opportunities and creates summaries with risks and questions for the screening committee.',
+        description: 'Automatically processes GUST applications, extracts critical signals (market, traction, founders, metrics), scores each startup, and highlights top opportunities with key risks and committee-ready insights.',
         icon: <ScreenSearchIcon sx={{ fontSize: 48, color: 'primary.main' }} />
       },
       {
         title: 'AI Pre-Screening Report Generator',
-        description: 'For each startup that passes initial screening, automatically generates comprehensive reports including market size analysis, competition mapping, scalability potential, founder risk profiles, strengths/weaknesses, and recommendations.',
+        description: 'Generates detailed screening reports with market analysis, competition mapping, scalability assessment, founder risk profiles, strengths, weaknesses, and clear recommendations.',
         icon: <AssessmentIcon sx={{ fontSize: 48, color: 'primary.main' }} />
       }
     ]
@@ -64,12 +64,12 @@ const solutions = [
     items: [
       {
         title: 'AI Pitch Analyzer',
-        description: 'During live pitches or from uploaded pitch decks/videos, AI listens and creates evaluation summaries, extracts key claims, fact-checks metrics, highlights risky assumptions, generates Q&A questions, and provides scoring aligned to Westchester Angels\' criteria.',
+        description: 'Analyzes live pitches or uploaded pitch decks/videos, producing summaries, extracting claims, verifying metrics, surfacing red flags, generating Q&A prompts, and scoring alignment with your investment criteria.',
         icon: <AutoAwesomeIcon sx={{ fontSize: 48, color: 'primary.main' }} />
       },
       {
         title: 'AI Q&A Assistant for Selection Committee',
-        description: 'Committee members can ask questions like "What should we ask a biotech startup with limited revenue?" AI produces sector-specific question lists, red-flag checks, due diligence checklists, and suggested follow-up areas to help the committee sound sharper and more consistent.',
+        description: 'Committee members can ask scenario-based questions (e.g., biotech with limited revenue). AI produces tailored question lists, red-flag checks, due-diligence checklists, and follow-up suggestions to improve consistency.',
         icon: <QuestionAnswerIcon sx={{ fontSize: 48, color: 'primary.main' }} />
       }
     ]
@@ -81,12 +81,12 @@ const solutions = [
     items: [
       {
         title: 'AI Due Diligence Report Generator',
-        description: 'Analyzes pitch materials, decks, websites, financials, and founder profiles to create comprehensive due diligence packages including market analysis, TAM/SAM/SOM, business model evaluation, founder background summaries, risks, compliance notes, technology overview, competitive landscape, and investment thesis fit.',
+        description: 'Reviews pitch materials, decks, websites, financials, and founder data to create full due-diligence reports including market sizing, TAM/SAM/SOM, business model evaluation, founder background, risks, compliance, technology overview, and competitive landscape.',
         icon: <DescriptionIcon sx={{ fontSize: 48, color: 'primary.main' }} />
       },
       {
         title: 'AI Red-Flag Detector',
-        description: 'Trained on past deals and startup failure statistics. Flags poor founder-market fit, unrealistic financial projections, missing traction, overstated TAM, weak competition analysis, and potential fraud indicators. A powerful differentiator in the pitch process.',
+        description: 'Identifies founder-market concerns, unrealistic projections, missing traction, inflated TAM, weak competitive moats, and fraud indicators based on historical patterns and failure statistics.',
         icon: <WarningIcon sx={{ fontSize: 48, color: 'primary.main' }} />
       }
     ]
@@ -98,12 +98,12 @@ const solutions = [
     items: [
       {
         title: 'AI Portfolio Performance Dashboard',
-        description: 'Automatically tracks revenue/traction updates, news mentions, founder posts, industry shifts, and competitor funding events. Creates monthly summaries highlighting risks and opportunities, such as "Company X is down 20% MoM. Their competitor just raised $15M. Risk level increased."',
+        description: 'Monitors KPIs, traction, news mentions, industry movements, and competitor funding. Generates monthly insights highlighting risks, opportunities, and meaningful changes in portfolio health.',
         icon: <DashboardIcon sx={{ fontSize: 48, color: 'primary.main' }} />
       },
       {
         title: 'Founder Support AI Assistant',
-        description: 'A dedicated AI assistant for founders in your portfolio. Helps with market research, pitch refinement, email writing, investor updates, competitive analysis, and hiring plans. This becomes a selling point: "Invest with Westchester Angels and gain access to an AI founder support system."',
+        description: 'An AI assistant available to portfolio founders for research, pitch refinement, investor updates, hiring plans, and competitive analysis—adding tangible value to Westchester Angels’ support offering.',
         icon: <SupportAgentIcon sx={{ fontSize: 48, color: 'primary.main' }} />
       }
     ]
@@ -114,13 +114,13 @@ const solutions = [
     ctaLabel: 'Add to Roadmap',
     items: [
       {
-        title: 'Angel Member Matching / Engagement Analyzer',
-        description: 'AI models each angel investor\'s interests, sector comfort, ticket size, past investments, meeting attendance, and engagement level. Suggests which members would be most interested in each startup, optimizes DD team composition, and prevents investor fatigue.',
+        title: 'Angel Member Engagement Analyzer',
+        description: 'Analyzes each member’s interests, sector expertise, past investments, ticket size, and activity to recommend ideal matches for each deal and optimize DD team composition.',
         icon: <PeopleIcon sx={{ fontSize: 48, color: 'primary.main' }} />
       },
       {
         title: 'New Member Discovery Engine',
-        description: 'Continuously scans LinkedIn, AngelList, SEC filings, startup events, podcasts, and local news to suggest potential new angel members. Extends your existing prospecting engine to help grow the angel group membership.',
+        description: 'Scans LinkedIn, AngelList, SEC filings, startup events, and regional news to identify potential new angel members and expand your investor network.',
         icon: <PersonSearchIcon sx={{ fontSize: 48, color: 'primary.main' }} />
       }
     ]
@@ -132,12 +132,12 @@ const solutions = [
     items: [
       {
         title: 'Automated Monthly Reporting',
-        description: 'AI generates comprehensive monthly reports including deal flow summaries, due diligence reports, portfolio updates, funding events, upcoming events, and top recommended startups. Replaces manual reporting work and ensures consistent, timely updates.',
+        description: 'Produces monthly reports covering deal flow, due diligence progress, portfolio updates, funding movements, recommended startups, and upcoming events—replacing manual reporting.',
         icon: <SummarizeIcon sx={{ fontSize: 48, color: 'primary.main' }} />
       },
       {
-        title: 'AI-Driven CRM / Investor Relations',
-        description: 'Automates follow-ups, check-ins, meeting summaries, reminders, and notes extraction from Zoom calls. All synced with the main dashboard to streamline investor relations and maintain consistent communication.',
+        title: 'AI-Driven CRM & Investor Relations',
+        description: 'Automates follow-ups, check-ins, meeting summaries, reminders, and Zoom call note extraction—syncing directly into your dashboard for consistent communication.',
         icon: <BusinessCenterIcon sx={{ fontSize: 48, color: 'primary.main' }} />
       }
     ]
@@ -149,17 +149,17 @@ const solutions = [
     items: [
       {
         title: 'AI Fund Model Simulator',
-        description: 'Allows leadership to model different fund sizes, fee structures, entry criteria, and expected returns based on historical angel performance. Helps plan future fund architecture as Westchester Angels transitions from an individual angel group to a full investment fund.',
+        description: 'Simulates fund sizes, fee structures, entry criteria, and expected returns based on historical performance to support the transition into an investment fund.',
         icon: <AccountBalanceIcon sx={{ fontSize: 48, color: 'primary.main' }} />
       },
       {
-        title: 'AI Investment Thesis Generator + Consistency Checker',
-        description: 'Enter your investment thesis and AI evaluates whether new deals match it, whether the group is drifting from the thesis, and how to refine it. Extremely valuable during fund creation to maintain strategic focus and consistency.',
+        title: 'AI Investment Thesis Consistency Checker',
+        description: 'Evaluates new deals against your investment thesis, detects drift, and recommends refinements—ensuring alignment during the transition from angel network to fund.',
         icon: <PsychologyIcon sx={{ fontSize: 48, color: 'primary.main' }} />
       }
     ]
   }
-]
+];
 
 export default function AISolutionsPage() {
   return (

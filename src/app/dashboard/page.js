@@ -373,10 +373,10 @@ export default function DashboardPage() {
             <DashboardIcon sx={{ fontSize: { xs: 32, sm: 40 }, color: 'primary.main' }} />
             <Box>
               <Typography variant="h3" component="h1" sx={{ fontSize: { xs: '1.75rem', sm: '3rem' } }}>
-                Investor Prospects
+                Investor Prospects Dashboard
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                Manage and track your investor pipeline
+                Manage, analyze, and engage your investor pipeline with AI-powered insights.
               </Typography>
             </Box>
           </Stack>
