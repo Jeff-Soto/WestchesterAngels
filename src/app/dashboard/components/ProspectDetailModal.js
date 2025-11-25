@@ -587,16 +587,6 @@ export default function ProspectDetailModal({ prospect, open, onClose, onStatusU
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
               <Stack spacing={1.5}>
-                <Stack direction="row" spacing={1} alignItems="center">
-                  <LanguageIcon color="primary" fontSize="small" sx={{ flexShrink: 0 }} />
-                  {displayProspect.website ? (
-                    <Link href={displayProspect.website} target="_blank" underline="hover">
-                      Company Website
-                    </Link>
-                  ) : (
-                    <Typography variant="body2" color="text.secondary">N/A</Typography>
-                  )}
-                </Stack>
                 {/* Social Media Icons - All together with labels */}
                 {(displayProspect.linkedin || displayProspect.twitter || displayProspect.facebook || displayProspect.instagram || displayProspect.youtube) && (
                   <Stack direction="row" spacing={1.5} alignItems="center" flexWrap="wrap" sx={{ ml: 0 }}>
@@ -757,6 +747,16 @@ export default function ProspectDetailModal({ prospect, open, onClose, onStatusU
                     )}
                   </Stack>
                 )}
+                <Stack direction="row" spacing={1} alignItems="center">
+                  <LanguageIcon color="primary" fontSize="small" sx={{ flexShrink: 0 }} />
+                  {displayProspect.website ? (
+                    <Link href={displayProspect.website} target="_blank" underline="hover">
+                      Company Website
+                    </Link>
+                  ) : (
+                    <Typography variant="body2" color="text.secondary">N/A</Typography>
+                  )}
+                </Stack>
               </Stack>
             </Grid>
           </Grid>
@@ -786,30 +786,30 @@ export default function ProspectDetailModal({ prospect, open, onClose, onStatusU
             <Grid size={{ xs: 12, sm: 6 }}>
               <Box>
                 <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-                  Focus Sectors
+                  Stage Preferences
                 </Typography>
-                {displayProspect.sectors && displayProspect.sectors.length > 0 ? (
-                  <Stack direction="row" spacing={0.5} flexWrap="wrap" sx={{ gap: 0.5 }}>
-                    {displayProspect.sectors.map((sector, idx) => (
-                      <Chip key={idx} label={sector} size="small" color="primary" variant="outlined" />
+                {displayProspect.stagePreferences && displayProspect.stagePreferences.length > 0 ? (
+                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                    {displayProspect.stagePreferences.map((stage, idx) => (
+                      <Chip key={idx} label={stage} size="small" color="primary" />
                     ))}
-                  </Stack>
+                  </Box>
                 ) : (
                   <Typography variant="body2" color="text.secondary">N/A</Typography>
                 )}
               </Box>
             </Grid>
-            <Grid size={{ xs: 12, sm: 6 }}>
+            <Grid size={{ xs: 12 }}>
               <Box>
                 <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-                  Stage Preferences
+                  Focus Sectors
                 </Typography>
-                {displayProspect.stagePreferences && displayProspect.stagePreferences.length > 0 ? (
-                  <Stack direction="row" spacing={0.5} flexWrap="wrap" sx={{ gap: 0.5 }}>
-                    {displayProspect.stagePreferences.map((stage, idx) => (
-                      <Chip key={idx} label={stage} size="small" color="primary" />
+                {displayProspect.sectors && displayProspect.sectors.length > 0 ? (
+                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                    {displayProspect.sectors.map((sector, idx) => (
+                      <Chip key={idx} label={sector} size="small" color="primary" variant="outlined" />
                     ))}
-                  </Stack>
+                  </Box>
                 ) : (
                   <Typography variant="body2" color="text.secondary">N/A</Typography>
                 )}
