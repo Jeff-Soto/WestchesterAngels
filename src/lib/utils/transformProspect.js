@@ -71,6 +71,11 @@ export function transformProspectForDashboard(dbProspect) {
       notes: dbProspect.notes || '',
       firstName: dbProspect.firstName || (dbProspect.name ? dbProspect.name.split(' ')[0] : ''),
       lastName: dbProspect.lastName || (dbProspect.name ? dbProspect.name.split(' ').slice(1).join(' ') : ''),
+      // Social media fields
+      twitter: dbProspect.twitter || null,
+      facebook: dbProspect.facebook || null,
+      instagram: dbProspect.instagram || null,
+      youtube: dbProspect.youtube || null,
       // Ensure enriched fields exist for "Why they match" section
       hqState: dbProspect.hqState || dbProspect.location?.state,
       hqCity: dbProspect.hqCity || dbProspect.location?.city,
@@ -149,6 +154,10 @@ export function transformProspectForDashboard(dbProspect) {
     whySummary: dbProspect.thesis || dbProspect.bio || '',
     email: dbProspect.email || '',
     linkedin: dbProspect.linkedin || '',
+    twitter: dbProspect.twitter || null,
+    facebook: dbProspect.facebook || null,
+    instagram: dbProspect.instagram || null,
+    youtube: dbProspect.youtube || null,
     website: dbProspect.website || '',
     phone: dbProspect.phone || '',
     status: dbProspect.status || 'new',

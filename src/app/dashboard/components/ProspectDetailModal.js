@@ -34,7 +34,11 @@ import {
   CalendarToday as CalendarIcon,
   TrendingUp as TrendingUpIcon,
   Business as BusinessIcon,
-  InfoOutlined as InfoIcon
+  InfoOutlined as InfoIcon,
+  Twitter as TwitterIcon,
+  Facebook as FacebookIcon,
+  Instagram as InstagramIcon,
+  YouTube as YouTubeIcon
 } from '@mui/icons-material'
 import { statusLabels } from '@/lib/mockData'
 import EmailComposeModal from './EmailComposeModal'
@@ -584,20 +588,6 @@ export default function ProspectDetailModal({ prospect, open, onClose, onStatusU
             <Grid size={{ xs: 12, sm: 6 }}>
               <Stack spacing={1.5}>
                 <Stack direction="row" spacing={1} alignItems="center">
-                  <LinkedInIcon color="primary" fontSize="small" sx={{ flexShrink: 0 }} />
-                  {displayProspect.linkedin ? (
-                    <Link 
-                      href={displayProspect.linkedin.startsWith('http') ? displayProspect.linkedin : `https://${displayProspect.linkedin}`} 
-                      target="_blank" 
-                      underline="hover"
-                    >
-                      LinkedIn Profile
-                    </Link>
-                  ) : (
-                    <Typography variant="body2" color="text.secondary">N/A</Typography>
-                  )}
-                </Stack>
-                <Stack direction="row" spacing={1} alignItems="center">
                   <LanguageIcon color="primary" fontSize="small" sx={{ flexShrink: 0 }} />
                   {displayProspect.website ? (
                     <Link href={displayProspect.website} target="_blank" underline="hover">
@@ -607,6 +597,166 @@ export default function ProspectDetailModal({ prospect, open, onClose, onStatusU
                     <Typography variant="body2" color="text.secondary">N/A</Typography>
                   )}
                 </Stack>
+                {/* Social Media Icons - All together with labels */}
+                {(displayProspect.linkedin || displayProspect.twitter || displayProspect.facebook || displayProspect.instagram || displayProspect.youtube) && (
+                  <Stack direction="row" spacing={1.5} alignItems="center" flexWrap="wrap" sx={{ ml: 0 }}>
+                    {displayProspect.linkedin && (
+                      <Stack direction="row" spacing={0.5} alignItems="center">
+                        <IconButton
+                          component="a"
+                          href={displayProspect.linkedin.startsWith('http') ? displayProspect.linkedin : `https://${displayProspect.linkedin}`}
+                          target="_blank"
+                          size="small"
+                          sx={{ 
+                            color: 'primary.main',
+                            padding: 0,
+                            margin: 0,
+                            minWidth: 'auto',
+                            width: 'auto',
+                            '&:hover': { 
+                              backgroundColor: 'transparent',
+                              transform: 'scale(1.1)'
+                            }
+                          }}
+                        >
+                          <LinkedInIcon fontSize="small" />
+                        </IconButton>
+                        <Link
+                          href={displayProspect.linkedin.startsWith('http') ? displayProspect.linkedin : `https://${displayProspect.linkedin}`}
+                          target="_blank"
+                          underline="hover"
+                          sx={{ fontSize: '0.875rem' }}
+                        >
+                          LinkedIn
+                        </Link>
+                      </Stack>
+                    )}
+                    {displayProspect.twitter && (
+                      <Stack direction="row" spacing={0.5} alignItems="center">
+                        <IconButton
+                          component="a"
+                          href={displayProspect.twitter.startsWith('http') ? displayProspect.twitter : `https://twitter.com/${displayProspect.twitter.replace('@', '')}`}
+                          target="_blank"
+                          size="small"
+                          sx={{ 
+                            color: 'primary.main',
+                            padding: 0,
+                            margin: 0,
+                            minWidth: 'auto',
+                            width: 'auto',
+                            '&:hover': { 
+                              backgroundColor: 'transparent',
+                              transform: 'scale(1.1)'
+                            }
+                          }}
+                        >
+                          <TwitterIcon fontSize="small" />
+                        </IconButton>
+                        <Link
+                          href={displayProspect.twitter.startsWith('http') ? displayProspect.twitter : `https://twitter.com/${displayProspect.twitter.replace('@', '')}`}
+                          target="_blank"
+                          underline="hover"
+                          sx={{ fontSize: '0.875rem' }}
+                        >
+                          Twitter
+                        </Link>
+                      </Stack>
+                    )}
+                    {displayProspect.facebook && (
+                      <Stack direction="row" spacing={0.5} alignItems="center">
+                        <IconButton
+                          component="a"
+                          href={displayProspect.facebook.startsWith('http') ? displayProspect.facebook : `https://facebook.com/${displayProspect.facebook}`}
+                          target="_blank"
+                          size="small"
+                          sx={{ 
+                            color: 'primary.main',
+                            padding: 0,
+                            margin: 0,
+                            minWidth: 'auto',
+                            width: 'auto',
+                            '&:hover': { 
+                              backgroundColor: 'transparent',
+                              transform: 'scale(1.1)'
+                            }
+                          }}
+                        >
+                          <FacebookIcon fontSize="small" />
+                        </IconButton>
+                        <Link
+                          href={displayProspect.facebook.startsWith('http') ? displayProspect.facebook : `https://facebook.com/${displayProspect.facebook}`}
+                          target="_blank"
+                          underline="hover"
+                          sx={{ fontSize: '0.875rem' }}
+                        >
+                          Facebook
+                        </Link>
+                      </Stack>
+                    )}
+                    {displayProspect.instagram && (
+                      <Stack direction="row" spacing={0.5} alignItems="center">
+                        <IconButton
+                          component="a"
+                          href={displayProspect.instagram.startsWith('http') ? displayProspect.instagram : `https://instagram.com/${displayProspect.instagram.replace('@', '')}`}
+                          target="_blank"
+                          size="small"
+                          sx={{ 
+                            color: 'primary.main',
+                            padding: 0,
+                            margin: 0,
+                            minWidth: 'auto',
+                            width: 'auto',
+                            '&:hover': { 
+                              backgroundColor: 'transparent',
+                              transform: 'scale(1.1)'
+                            }
+                          }}
+                        >
+                          <InstagramIcon fontSize="small" />
+                        </IconButton>
+                        <Link
+                          href={displayProspect.instagram.startsWith('http') ? displayProspect.instagram : `https://instagram.com/${displayProspect.instagram.replace('@', '')}`}
+                          target="_blank"
+                          underline="hover"
+                          sx={{ fontSize: '0.875rem' }}
+                        >
+                          Instagram
+                        </Link>
+                      </Stack>
+                    )}
+                    {displayProspect.youtube && (
+                      <Stack direction="row" spacing={0.5} alignItems="center">
+                        <IconButton
+                          component="a"
+                          href={displayProspect.youtube.startsWith('http') ? displayProspect.youtube : `https://youtube.com/${displayProspect.youtube}`}
+                          target="_blank"
+                          size="small"
+                          sx={{ 
+                            color: 'primary.main',
+                            padding: 0,
+                            margin: 0,
+                            minWidth: 'auto',
+                            width: 'auto',
+                            '&:hover': { 
+                              backgroundColor: 'transparent',
+                              transform: 'scale(1.1)'
+                            }
+                          }}
+                        >
+                          <YouTubeIcon fontSize="small" />
+                        </IconButton>
+                        <Link
+                          href={displayProspect.youtube.startsWith('http') ? displayProspect.youtube : `https://youtube.com/${displayProspect.youtube}`}
+                          target="_blank"
+                          underline="hover"
+                          sx={{ fontSize: '0.875rem' }}
+                        >
+                          YouTube
+                        </Link>
+                      </Stack>
+                    )}
+                  </Stack>
+                )}
               </Stack>
             </Grid>
           </Grid>
@@ -676,7 +826,7 @@ export default function ProspectDetailModal({ prospect, open, onClose, onStatusU
           </Typography>
           <Paper variant="outlined" sx={{ p: 2, mb: 3 }}>
             {displayProspect.portfolio && displayProspect.portfolio.length > 0 ? (
-              <Stack direction="row" spacing={1} flexWrap="wrap" sx={{ gap: 1 }}>
+              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
                 {displayProspect.portfolio.map((company, idx) => (
                   <Chip 
                     key={idx} 
@@ -686,7 +836,7 @@ export default function ProspectDetailModal({ prospect, open, onClose, onStatusU
                     variant="outlined"
                   />
                 ))}
-              </Stack>
+              </Box>
             ) : (
               <Typography variant="body2" color="text.secondary">N/A</Typography>
             )}

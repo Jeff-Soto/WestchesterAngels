@@ -459,9 +459,8 @@ Return JSON:
         if (typeMatch) score += 2
       }
       
-      // Name/org match (fallback to keyword search)
-      const nameMatch = prospect.name?.toLowerCase().includes(query.toLowerCase()) ||
-                       prospect.org?.toLowerCase().includes(query.toLowerCase())
+      // Name match (fallback to keyword search)
+      const nameMatch = prospect.name?.toLowerCase().includes(query.toLowerCase())
       if (nameMatch) score += 5
       
       return { prospect, relevance: score }
@@ -476,8 +475,7 @@ Return JSON:
     // Fallback to simple keyword search
     return prospects
       .filter(p => 
-        p.name?.toLowerCase().includes(query.toLowerCase()) ||
-        p.org?.toLowerCase().includes(query.toLowerCase())
+        p.name?.toLowerCase().includes(query.toLowerCase())
       )
       .map(p => ({ prospect: p, relevance: 1 }))
   }

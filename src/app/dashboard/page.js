@@ -504,7 +504,7 @@ export default function DashboardPage() {
            <Box sx={{ flex: '0 0 calc(50% - 12px)', minWidth: 0 }}>
              <TextField
                label="Search"
-               placeholder="Search by name, organization, or email..."
+               placeholder="Search by name or email..."
                variant="outlined"
                fullWidth
                value={searchTerm}

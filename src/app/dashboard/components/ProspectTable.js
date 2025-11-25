@@ -58,6 +58,11 @@ export default function ProspectTable({ prospects, onProspectClick, onStatusUpda
       bValue = b.sectors.join(', ')
     }
 
+    if (orderBy === 'investorType') {
+      aValue = formatInvestorType(a.investorType)
+      bValue = formatInvestorType(b.investorType)
+    }
+
     if (aValue < bValue) {
       return order === 'asc' ? -1 : 1
     }
@@ -89,6 +94,25 @@ export default function ProspectTable({ prospects, onProspectClick, onStatusUpda
     return 'default'
   }
 
+  const formatInvestorType = (type) => {
+    if (!type) return 'Unknown'
+    const typeLabels = {
+      vc: 'Venture Capitalist',
+      solo_angel: 'Solo Angel',
+      angel_network: 'Angel Network',
+      corporate_vc: 'Corporate VC',
+      family_office: 'Family Office',
+      accelerator: 'Accelerator',
+      pe: 'Private Equity',
+      public_fund: 'Public Fund',
+      revenue_based: 'Revenue-Based',
+      other: 'Other'
+    }
+    return typeLabels[type] || type.split('_').map(word => 
+      word.charAt(0).toUpperCase() + word.slice(1)
+    ).join(' ')
+  }
+
   return (
     <Paper>
       <TableContainer>
@@ -106,11 +130,11 @@ export default function ProspectTable({ prospects, onProspectClick, onStatusUpda
               </TableCell>
               <TableCell>
                 <TableSortLabel
-                  active={orderBy === 'org'}
-                  direction={orderBy === 'org' ? order : 'asc'}
-                  onClick={() => handleSort('org')}
+                  active={orderBy === 'investorType'}
+                  direction={orderBy === 'investorType' ? order : 'asc'}
+                  onClick={() => handleSort('investorType')}
                 >
-                  Organization
+                  Investor Type
                 </TableSortLabel>
               </TableCell>
               <TableCell>
@@ -167,9 +191,14 @@ export default function ProspectTable({ prospects, onProspectClick, onStatusUpda
                     </Typography>
                   </TableCell>
                   <TableCell>
-                    <Typography variant="body2">
-                      {prospect.org}
-                    </Typography>
+                    <Chip
+                      label={formatInvestorType(prospect.investorType)}
+                      size="small"
+                      variant="outlined"
+                      sx={{
+                        fontWeight: 500
+                      }}
+                    />
                   </TableCell>
                   <TableCell>
                     <Stack direction="row" spacing={0.5} alignItems="center">
