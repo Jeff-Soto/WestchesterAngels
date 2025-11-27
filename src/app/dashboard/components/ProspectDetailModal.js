@@ -1,3 +1,4 @@
+import { useState, useEffect, useRef } from 'react'
 import {
   Dialog,
   DialogTitle,
@@ -18,7 +19,9 @@ import {
   ListItem,
   ListItemText,
   useTheme,
-  useMediaQuery
+  useMediaQuery,
+  CircularProgress,
+  Alert
 } from '@mui/material'
 import {
   Close as CloseIcon,
@@ -31,31 +34,265 @@ import {
   CalendarToday as CalendarIcon,
   TrendingUp as TrendingUpIcon,
   Business as BusinessIcon,
-  InfoOutlined as InfoIcon
+  InfoOutlined as InfoIcon,
+  Twitter as TwitterIcon,
+  Facebook as FacebookIcon,
+  Instagram as InstagramIcon,
+  YouTube as YouTubeIcon
 } from '@mui/icons-material'
 import { statusLabels } from '@/lib/mockData'
+import EmailComposeModal from './EmailComposeModal'
+import LinkedInMessageModal from './LinkedInMessageModal'
+import { generateMatchReasons } from '@/lib/utils/matchReasons'
+import { estimateDistanceFromNYC, getDistanceDescription, getMetroScore } from '@/lib/utils/distance'
+import { calculateRelevanceScore } from '@/lib/filtering/relevanceFilter'
+import { parseMarkdown } from '@/lib/utils/parseMarkdown'
 
-export default function ProspectDetailModal({ prospect, open, onClose, onStatusUpdate }) {
+export default function ProspectDetailModal({ prospect, open, onClose, onStatusUpdate, onEmailSent }) {
+  const [emailModalOpen, setEmailModalOpen] = useState(false)
+  const [generatingEmail, setGeneratingEmail] = useState(false)
+  const [emailError, setEmailError] = useState(null)
+  const [generatedEmail, setGeneratedEmail] = useState(null)
+  const [linkedInModalOpen, setLinkedInModalOpen] = useState(false)
+  const [generatingLinkedIn, setGeneratingLinkedIn] = useState(false)
+  const [linkedInError, setLinkedInError] = useState(null)
+  const [generatedLinkedInMessage, setGeneratedLinkedInMessage] = useState(null)
+  const [aiExplanation, setAiExplanation] = useState(prospect?.aiMatchExplanation || null)
+  const [generatingExplanation, setGeneratingExplanation] = useState(false)
+  const [researchNotes, setResearchNotes] = useState(prospect?.researchNotes || null)
+  const [generatingResearch, setGeneratingResearch] = useState(false)
+  const [portfolioAnalysis, setPortfolioAnalysis] = useState(prospect?.portfolioAnalysis || null)
+  // Local prospect state to allow immediate UI updates
+  const [localProspect, setLocalProspect] = useState(prospect)
+  const timelineRef = useRef(null)
   const theme = useTheme()
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'))
   
-  if (!prospect) return null
+  // Clear error and email state when modal closes
+  useEffect(() => {
+    if (!open) {
+      setEmailError(null)
+      setGeneratedEmail(null)
+      setGeneratingEmail(false)
+      setEmailModalOpen(false)
+      setLinkedInError(null)
+      setGeneratedLinkedInMessage(null)
+      setGeneratingLinkedIn(false)
+      setLinkedInModalOpen(false)
+    }
+  }, [open])
+
+  // Update local prospect and AI data when prospect prop changes
+  useEffect(() => {
+    if (prospect) {
+      setLocalProspect(prospect)
+      setAiExplanation(prospect.aiMatchExplanation || null)
+      setResearchNotes(prospect.researchNotes || null)
+      setPortfolioAnalysis(prospect.portfolioAnalysis || null)
+    }
+  }, [prospect])
+
+  // Use localProspect for display, fallback to prospect prop
+  const displayProspect = localProspect || prospect
+
+  const handleGenerateAIExplanation = async () => {
+    setGeneratingExplanation(true)
+    try {
+      const response = await fetch('/api/ai/match-explanation', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          prospectId: displayProspect.id
+        })
+      })
+
+      const result = await response.json()
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.error || 'Failed to generate AI explanation')
+      }
+
+      setAiExplanation(result.data.explanation)
+    } catch (error) {
+      console.error('Error generating AI explanation:', error)
+      setEmailError(error.message || 'Failed to generate AI explanation')
+    } finally {
+      setGeneratingExplanation(false)
+    }
+  }
+
+  const handleResearchProspect = async () => {
+    setGeneratingResearch(true)
+    try {
+      const response = await fetch('/api/ai/research', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          prospectId: displayProspect.id
+        })
+      })
+
+      const result = await response.json()
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.error || 'Failed to research prospect')
+      }
+
+      setResearchNotes(result.data.researchNotes)
+    } catch (error) {
+      console.error('Error researching prospect:', error)
+      setEmailError(error.message || 'Failed to research prospect')
+    } finally {
+      setGeneratingResearch(false)
+    }
+  }
+  
+  if (!displayProspect) return null
+
+  const handleSendEmailClick = async () => {
+    setGeneratingEmail(true)
+    setEmailError(null)
+    setGeneratedEmail(null)
+
+    try {
+      const response = await fetch('/api/email/generate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          prospectId: displayProspect.id
+        })
+      })
+
+      const result = await response.json()
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.error || 'Failed to generate email')
+      }
+
+      setGeneratedEmail(result.data)
+      setEmailModalOpen(true)
+    } catch (error) {
+      console.error('Error generating email:', error)
+      setEmailError(error.message || 'Failed to generate email')
+    } finally {
+      setGeneratingEmail(false)
+    }
+  }
+
+  const handleEmailSend = async (emailData) => {
+    // Update local prospect state immediately for responsive UI
+    const now = new Date().toISOString()
+    const currentProspect = localProspect || prospect
+    const updatedProspect = {
+      ...currentProspect,
+      status: 'contacted',
+      lastContactedAt: now
+    }
+    setLocalProspect(updatedProspect)
+    
+    // Update status in database
+    if (onStatusUpdate) {
+      await onStatusUpdate(currentProspect.id, 'contacted')
+    }
+    
+    // Show success via callback
+    if (onEmailSent) {
+      onEmailSent(currentProspect.name)
+    }
+    
+    // Close email modal
+    setEmailModalOpen(false)
+    setGeneratedEmail(null)
+    
+    // Auto-scroll to timeline after a brief delay to allow DOM update
+    setTimeout(() => {
+      if (timelineRef.current) {
+        timelineRef.current.scrollIntoView({ 
+          behavior: 'smooth', 
+          block: 'nearest' 
+        })
+      }
+    }, 100)
+  }
+
+  const handleGenerateLinkedInClick = async () => {
+    setGeneratingLinkedIn(true)
+    setLinkedInError(null)
+    setGeneratedLinkedInMessage(null)
+
+    try {
+      const response = await fetch('/api/linkedin/generate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          prospectId: displayProspect.id
+        })
+      })
+
+      const result = await response.json()
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.error || 'Failed to generate LinkedIn message')
+      }
+
+      setGeneratedLinkedInMessage(result.data)
+      setLinkedInModalOpen(true)
+    } catch (error) {
+      console.error('Error generating LinkedIn message:', error)
+      setLinkedInError(error.message || 'Failed to generate LinkedIn message')
+    } finally {
+      setGeneratingLinkedIn(false)
+    }
+  }
+
+  const handleLinkedInMessageGenerated = async () => {
+    // Update local prospect state immediately for responsive UI
+    const now = new Date().toISOString()
+    const currentProspect = localProspect || prospect
+    const updatedProspect = {
+      ...currentProspect,
+      status: 'contacted',
+      lastContactedAt: now
+    }
+    setLocalProspect(updatedProspect)
+    
+    // Update status in database
+    if (onStatusUpdate) {
+      await onStatusUpdate(currentProspect.id, 'contacted')
+    }
+    
+    // Auto-scroll to timeline after a brief delay to allow DOM update
+    setTimeout(() => {
+      if (timelineRef.current) {
+        timelineRef.current.scrollIntoView({ 
+          behavior: 'smooth', 
+          block: 'nearest' 
+        })
+      }
+    }, 100)
+  }
 
   const getScoreColor = (score) => {
     if (score >= 90) return 'success'
     if (score >= 80) return 'primary'
     if (score >= 70) return 'info'
     if (score >= 60) return 'warning'
-    return 'default'
+    return 'error' // Use error color for low scores to make them more visible
   }
 
-  // Calculate feature scores (simulated breakdown)
+  // Calculate feature scores based on actual prospect data
   const featureScores = {
-    sectorMatch: Math.min(100, prospect.fitScore + Math.random() * 10 - 5),
-    geoProximity: ['NY', 'NJ', 'CT'].includes(prospect.location.state) ? 100 : 60,
-    stageMatch: prospect.stagePreferences.includes('Seed') || prospect.stagePreferences.includes('Series A') ? 100 : 75,
-    checkSizeMatch: 95,
-    recentActivity: 85
+    geoProximity: ['NY', 'NJ', 'CT', 'PA'].includes(displayProspect.location?.state || displayProspect.hqState) ? 100 : 60,
+    stageMatch: (displayProspect.stagePreferences || []).some(s => ['Seed', 'Series A', 'Pre-Seed'].includes(s)) ? 100 : 75,
+    recentActivity: displayProspect.lastContactedAt ? 85 : (displayProspect.updatedAt ? 70 : 50)
   }
 
   return (
@@ -70,10 +307,10 @@ export default function ProspectDetailModal({ prospect, open, onClose, onStatusU
         <Stack direction="row" alignItems="center" justifyContent="space-between">
           <Box>
             <Typography variant="h5" component="div">
-              {prospect.name}
+              {displayProspect.name}
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              {prospect.org}
+              {displayProspect.org}
             </Typography>
           </Box>
           <IconButton onClick={onClose} size="small">
@@ -93,19 +330,29 @@ export default function ProspectDetailModal({ prospect, open, onClose, onStatusU
           >
             <Box
               sx={{
-                width: { xs: 70, sm: 80 },
-                height: { xs: 70, sm: 80 },
+                width: { xs: 80, sm: 90 },
+                height: { xs: 80, sm: 90 },
                 borderRadius: '50%',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 bgcolor: 'primary.main',
                 color: 'white',
-                flexShrink: 0
+                flexShrink: 0,
+                padding: { xs: 1, sm: 1.5 }
               }}
             >
-              <Typography variant="h3" fontWeight="bold" sx={{ fontSize: { xs: '2rem', sm: '3rem' } }}>
-                {prospect.fitScore}
+              <Typography 
+                variant="h3" 
+                fontWeight="bold" 
+                sx={{ 
+                  fontSize: displayProspect.fitScore >= 100 
+                    ? { xs: '1.75rem', sm: '2.5rem' }
+                    : { xs: '2rem', sm: '3rem' },
+                  lineHeight: 1
+                }}
+              >
+                {displayProspect.fitScore}
               </Typography>
             </Box>
             <Box flex={1} sx={{ textAlign: { xs: 'center', sm: 'left' } }}>
@@ -113,7 +360,7 @@ export default function ProspectDetailModal({ prospect, open, onClose, onStatusU
                 Fit Score
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                {prospect.whySummary}
+                {displayProspect.whySummary}
               </Typography>
             </Box>
           </Stack>
@@ -124,10 +371,8 @@ export default function ProspectDetailModal({ prospect, open, onClose, onStatusU
           </Typography>
           <Stack spacing={1.5}>
             {[
-              { label: 'Sector Match', value: featureScores.sectorMatch },
               { label: 'Geographic Proximity', value: featureScores.geoProximity },
               { label: 'Stage Match', value: featureScores.stageMatch },
-              { label: 'Check Size Match', value: featureScores.checkSizeMatch },
               { label: 'Recent Activity', value: featureScores.recentActivity }
             ].map((feature, idx) => (
               <Box key={idx}>
@@ -139,13 +384,174 @@ export default function ProspectDetailModal({ prospect, open, onClose, onStatusU
                 </Stack>
                 <LinearProgress 
                   variant="determinate" 
-                  value={feature.value}
+                  value={Math.max(1, feature.value)} // Ensure at least 1% so bar is visible
                   color={getScoreColor(feature.value)}
+                  sx={{
+                    height: 8,
+                    borderRadius: 4,
+                    backgroundColor: 'rgba(0, 0, 0, 0.1)',
+                    '& .MuiLinearProgress-bar': {
+                      borderRadius: 4,
+                    }
+                  }}
                 />
               </Box>
             ))}
           </Stack>
         </Paper>
+
+        {/* Why They Match Section */}
+        {displayProspect.hqState && (
+          <Paper sx={{ p: { xs: 2, sm: 3 }, mb: 3, bgcolor: 'success.light', color: 'success.contrastText' }}>
+            <Stack direction="row" spacing={1} alignItems="center" justifyContent="space-between" mb={2}>
+              <Stack direction="row" spacing={1} alignItems="center">
+                <InfoIcon />
+                <Typography variant="h6" fontWeight="bold">
+                  Why This Investor Is A Match
+                </Typography>
+              </Stack>
+              {!aiExplanation && (
+                <Button
+                  size="small"
+                  variant="outlined"
+                  onClick={handleGenerateAIExplanation}
+                  disabled={generatingExplanation}
+                  startIcon={generatingExplanation ? <CircularProgress size={16} /> : null}
+                  sx={{ 
+                    bgcolor: 'rgba(255, 255, 255, 0.2)',
+                    color: 'inherit',
+                    borderColor: 'rgba(255, 255, 255, 0.5)',
+                    '&:hover': {
+                      bgcolor: 'rgba(255, 255, 255, 0.3)',
+                      borderColor: 'rgba(255, 255, 255, 0.7)'
+                    }
+                  }}
+                >
+                  {generatingExplanation ? 'Generating...' : '🤖 AI Analysis'}
+                </Button>
+              )}
+            </Stack>
+            <Stack spacing={1.5}>
+              {generateMatchReasons({ ...displayProspect, aiMatchExplanation: aiExplanation }).map((reason, idx) => (
+                <Stack 
+                  key={idx} 
+                  direction="row" 
+                  spacing={1.5} 
+                  alignItems="flex-start"
+                  sx={{
+                    p: 1.5,
+                    borderRadius: 1,
+                    bgcolor: reason.highlight ? 'rgba(255, 255, 255, 0.2)' : 'rgba(255, 255, 255, 0.1)',
+                    border: reason.highlight ? '1px solid rgba(255, 255, 255, 0.3)' : 'none'
+                  }}
+                >
+                  <Typography variant="h6" sx={{ fontSize: '1.2rem', lineHeight: 1 }}>
+                    {reason.icon}
+                  </Typography>
+                  <Typography variant="body2" sx={{ flex: 1, fontWeight: reason.highlight ? 600 : 400 }}>
+                    {reason.text}
+                  </Typography>
+                </Stack>
+              ))}
+            </Stack>
+            
+            {/* Distance and Metro Score */}
+            {displayProspect.hqState && (displayProspect.hqState === 'NY' || displayProspect.hqState === 'NJ' || displayProspect.hqState === 'CT' || displayProspect.hqState === 'PA') && (
+              <Box sx={{ mt: 2, pt: 2, borderTop: '1px solid rgba(255, 255, 255, 0.2)' }}>
+                <Stack direction="row" spacing={2} alignItems="center">
+                  <PlaceIcon fontSize="small" />
+                  <Typography variant="body2">
+                    {displayProspect.hqCity || 'Location'}, {displayProspect.hqState}
+                    {(() => {
+                      const distance = estimateDistanceFromNYC(displayProspect.hqState, displayProspect.hqCity);
+                      return distance !== null ? ` (${getDistanceDescription(distance)})` : '';
+                    })()}
+                  </Typography>
+                  <Chip 
+                    label={`Metro Score: ${getMetroScore(estimateDistanceFromNYC(displayProspect.hqState, displayProspect.hqCity))}`}
+                    size="small"
+                    sx={{ 
+                      bgcolor: 'rgba(255, 255, 255, 0.3)',
+                      color: 'inherit',
+                      fontWeight: 600
+                    }}
+                  />
+                </Stack>
+              </Box>
+            )}
+          </Paper>
+        )}
+
+        {/* Portfolio Analysis */}
+        {portfolioAnalysis && (
+          <Paper sx={{ p: { xs: 2, sm: 3 }, mb: 3, bgcolor: 'info.light', color: 'info.contrastText' }}>
+            <Stack direction="row" spacing={1} alignItems="center" mb={2}>
+              <TrendingUpIcon />
+              <Typography variant="h6" fontWeight="bold">
+                Portfolio Analysis
+              </Typography>
+            </Stack>
+            {portfolioAnalysis.insights && (
+              <Typography variant="body2" sx={{ mb: 2 }}>
+                {portfolioAnalysis.insights}
+              </Typography>
+            )}
+            {portfolioAnalysis.commonCharacteristics && portfolioAnalysis.commonCharacteristics.length > 0 && (
+              <Box sx={{ mb: 2 }}>
+                <Typography variant="subtitle2" sx={{ mb: 1 }}>Common Characteristics:</Typography>
+                <Stack direction="row" spacing={0.5} flexWrap="wrap" sx={{ gap: 0.5 }}>
+                  {portfolioAnalysis.commonCharacteristics.map((char, idx) => (
+                    <Chip key={idx} label={char} size="small" sx={{ bgcolor: 'rgba(255, 255, 255, 0.2)' }} />
+                  ))}
+                </Stack>
+              </Box>
+            )}
+            {portfolioAnalysis.sectorFocus && (
+              <Typography variant="body2">
+                <strong>Sector Focus:</strong> {portfolioAnalysis.sectorFocus}
+              </Typography>
+            )}
+          </Paper>
+        )}
+
+        {/* Research Notes */}
+        {researchNotes && (
+          <Paper sx={{ p: { xs: 2, sm: 3 }, mb: 3, bgcolor: 'background.default' }}>
+            <Stack direction="row" spacing={1} alignItems="center" justifyContent="space-between" mb={2}>
+              <Stack direction="row" spacing={1} alignItems="center">
+                <InfoIcon color="primary" />
+                <Typography variant="h6" fontWeight="bold">
+                  Research Notes
+                </Typography>
+              </Stack>
+              <Button
+                size="small"
+                variant="outlined"
+                onClick={handleResearchProspect}
+                disabled={generatingResearch}
+                startIcon={generatingResearch ? <CircularProgress size={16} /> : null}
+              >
+                {generatingResearch ? 'Researching...' : '🔄 Refresh'}
+              </Button>
+            </Stack>
+            <Box>
+              {parseMarkdown(researchNotes)}
+            </Box>
+          </Paper>
+        )}
+        {!researchNotes && (
+          <Box sx={{ mb: 3 }}>
+            <Button
+              variant="outlined"
+              onClick={handleResearchProspect}
+              disabled={generatingResearch}
+              startIcon={generatingResearch ? <CircularProgress size={16} /> : <InfoIcon />}
+              fullWidth
+            >
+              {generatingResearch ? 'Researching Prospect...' : '🤖 Generate Research Notes'}
+            </Button>
+          </Box>
+        )}
 
         {/* Contact Information */}
         <Box>
@@ -157,37 +563,199 @@ export default function ProspectDetailModal({ prospect, open, onClose, onStatusU
               <Stack spacing={1.5}>
                 <Stack direction="row" spacing={1} alignItems="center">
                   <EmailIcon color="primary" fontSize="small" sx={{ flexShrink: 0 }} />
-                  <Link 
-                    href={`mailto:${prospect.email}`} 
-                    underline="hover"
-                    sx={{ 
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      wordBreak: 'break-all'
-                    }}
-                  >
-                    {prospect.email}
-                  </Link>
+                  {displayProspect.email ? (
+                    <Link 
+                      href={`mailto:${displayProspect.email}`} 
+                      underline="hover"
+                      sx={{ 
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        wordBreak: 'break-all'
+                      }}
+                    >
+                      {displayProspect.email}
+                    </Link>
+                  ) : (
+                    <Typography variant="body2" color="text.secondary">N/A</Typography>
+                  )}
                 </Stack>
                 <Stack direction="row" spacing={1} alignItems="center">
                   <PhoneIcon color="primary" fontSize="small" sx={{ flexShrink: 0 }} />
-                  <Typography variant="body2">{prospect.phone}</Typography>
+                  <Typography variant="body2">{displayProspect.phone || 'N/A'}</Typography>
                 </Stack>
               </Stack>
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
               <Stack spacing={1.5}>
-                <Stack direction="row" spacing={1} alignItems="center">
-                  <LinkedInIcon color="primary" fontSize="small" sx={{ flexShrink: 0 }} />
-                  <Link href={`https://${prospect.linkedin}`} target="_blank" underline="hover">
-                    LinkedIn Profile
-                  </Link>
-                </Stack>
+                {/* Social Media Icons - All together with labels */}
+                {(displayProspect.linkedin || displayProspect.twitter || displayProspect.facebook || displayProspect.instagram || displayProspect.youtube) && (
+                  <Stack direction="row" spacing={1.5} alignItems="center" flexWrap="wrap" sx={{ ml: 0 }}>
+                    {displayProspect.linkedin && (
+                      <Stack direction="row" spacing={0.5} alignItems="center">
+                        <IconButton
+                          component="a"
+                          href={displayProspect.linkedin.startsWith('http') ? displayProspect.linkedin : `https://${displayProspect.linkedin}`}
+                          target="_blank"
+                          size="small"
+                          sx={{ 
+                            color: 'primary.main',
+                            padding: 0,
+                            margin: 0,
+                            minWidth: 'auto',
+                            width: 'auto',
+                            '&:hover': { 
+                              backgroundColor: 'transparent',
+                              transform: 'scale(1.1)'
+                            }
+                          }}
+                        >
+                          <LinkedInIcon fontSize="small" />
+                        </IconButton>
+                        <Link
+                          href={displayProspect.linkedin.startsWith('http') ? displayProspect.linkedin : `https://${displayProspect.linkedin}`}
+                          target="_blank"
+                          underline="hover"
+                          sx={{ fontSize: '0.875rem' }}
+                        >
+                          LinkedIn
+                        </Link>
+                      </Stack>
+                    )}
+                    {displayProspect.twitter && (
+                      <Stack direction="row" spacing={0.5} alignItems="center">
+                        <IconButton
+                          component="a"
+                          href={displayProspect.twitter.startsWith('http') ? displayProspect.twitter : `https://twitter.com/${displayProspect.twitter.replace('@', '')}`}
+                          target="_blank"
+                          size="small"
+                          sx={{ 
+                            color: 'primary.main',
+                            padding: 0,
+                            margin: 0,
+                            minWidth: 'auto',
+                            width: 'auto',
+                            '&:hover': { 
+                              backgroundColor: 'transparent',
+                              transform: 'scale(1.1)'
+                            }
+                          }}
+                        >
+                          <TwitterIcon fontSize="small" />
+                        </IconButton>
+                        <Link
+                          href={displayProspect.twitter.startsWith('http') ? displayProspect.twitter : `https://twitter.com/${displayProspect.twitter.replace('@', '')}`}
+                          target="_blank"
+                          underline="hover"
+                          sx={{ fontSize: '0.875rem' }}
+                        >
+                          Twitter
+                        </Link>
+                      </Stack>
+                    )}
+                    {displayProspect.facebook && (
+                      <Stack direction="row" spacing={0.5} alignItems="center">
+                        <IconButton
+                          component="a"
+                          href={displayProspect.facebook.startsWith('http') ? displayProspect.facebook : `https://facebook.com/${displayProspect.facebook}`}
+                          target="_blank"
+                          size="small"
+                          sx={{ 
+                            color: 'primary.main',
+                            padding: 0,
+                            margin: 0,
+                            minWidth: 'auto',
+                            width: 'auto',
+                            '&:hover': { 
+                              backgroundColor: 'transparent',
+                              transform: 'scale(1.1)'
+                            }
+                          }}
+                        >
+                          <FacebookIcon fontSize="small" />
+                        </IconButton>
+                        <Link
+                          href={displayProspect.facebook.startsWith('http') ? displayProspect.facebook : `https://facebook.com/${displayProspect.facebook}`}
+                          target="_blank"
+                          underline="hover"
+                          sx={{ fontSize: '0.875rem' }}
+                        >
+                          Facebook
+                        </Link>
+                      </Stack>
+                    )}
+                    {displayProspect.instagram && (
+                      <Stack direction="row" spacing={0.5} alignItems="center">
+                        <IconButton
+                          component="a"
+                          href={displayProspect.instagram.startsWith('http') ? displayProspect.instagram : `https://instagram.com/${displayProspect.instagram.replace('@', '')}`}
+                          target="_blank"
+                          size="small"
+                          sx={{ 
+                            color: 'primary.main',
+                            padding: 0,
+                            margin: 0,
+                            minWidth: 'auto',
+                            width: 'auto',
+                            '&:hover': { 
+                              backgroundColor: 'transparent',
+                              transform: 'scale(1.1)'
+                            }
+                          }}
+                        >
+                          <InstagramIcon fontSize="small" />
+                        </IconButton>
+                        <Link
+                          href={displayProspect.instagram.startsWith('http') ? displayProspect.instagram : `https://instagram.com/${displayProspect.instagram.replace('@', '')}`}
+                          target="_blank"
+                          underline="hover"
+                          sx={{ fontSize: '0.875rem' }}
+                        >
+                          Instagram
+                        </Link>
+                      </Stack>
+                    )}
+                    {displayProspect.youtube && (
+                      <Stack direction="row" spacing={0.5} alignItems="center">
+                        <IconButton
+                          component="a"
+                          href={displayProspect.youtube.startsWith('http') ? displayProspect.youtube : `https://youtube.com/${displayProspect.youtube}`}
+                          target="_blank"
+                          size="small"
+                          sx={{ 
+                            color: 'primary.main',
+                            padding: 0,
+                            margin: 0,
+                            minWidth: 'auto',
+                            width: 'auto',
+                            '&:hover': { 
+                              backgroundColor: 'transparent',
+                              transform: 'scale(1.1)'
+                            }
+                          }}
+                        >
+                          <YouTubeIcon fontSize="small" />
+                        </IconButton>
+                        <Link
+                          href={displayProspect.youtube.startsWith('http') ? displayProspect.youtube : `https://youtube.com/${displayProspect.youtube}`}
+                          target="_blank"
+                          underline="hover"
+                          sx={{ fontSize: '0.875rem' }}
+                        >
+                          YouTube
+                        </Link>
+                      </Stack>
+                    )}
+                  </Stack>
+                )}
                 <Stack direction="row" spacing={1} alignItems="center">
                   <LanguageIcon color="primary" fontSize="small" sx={{ flexShrink: 0 }} />
-                  <Link href={prospect.website} target="_blank" underline="hover">
-                    Company Website
-                  </Link>
+                  {displayProspect.website ? (
+                    <Link href={displayProspect.website} target="_blank" underline="hover">
+                      Company Website
+                    </Link>
+                  ) : (
+                    <Typography variant="body2" color="text.secondary">N/A</Typography>
+                  )}
                 </Stack>
               </Stack>
             </Grid>
@@ -210,30 +778,8 @@ export default function ProspectDetailModal({ prospect, open, onClose, onStatusU
                 <Stack direction="row" spacing={1} alignItems="center">
                   <PlaceIcon color="primary" fontSize="small" />
                   <Typography>
-                    {prospect.location.city}, {prospect.location.state}
+                    {displayProspect.location.city}, {displayProspect.location.state}
                   </Typography>
-                </Stack>
-              </Box>
-            </Grid>
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <Box>
-                <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-                  Check Size Range
-                </Typography>
-                <Typography>
-                  ${(prospect.checkSize.min / 1000).toFixed(0)}K - ${(prospect.checkSize.max / 1000000).toFixed(1)}M
-                </Typography>
-              </Box>
-            </Grid>
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <Box>
-                <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-                  Focus Sectors
-                </Typography>
-                <Stack direction="row" spacing={0.5} flexWrap="wrap" sx={{ gap: 0.5 }}>
-                  {prospect.sectors.map((sector, idx) => (
-                    <Chip key={idx} label={sector} size="small" color="primary" variant="outlined" />
-                  ))}
                 </Stack>
               </Box>
             </Grid>
@@ -242,85 +788,243 @@ export default function ProspectDetailModal({ prospect, open, onClose, onStatusU
                 <Typography variant="subtitle2" color="text.secondary" gutterBottom>
                   Stage Preferences
                 </Typography>
-                <Stack direction="row" spacing={0.5} flexWrap="wrap" sx={{ gap: 0.5 }}>
-                  {prospect.stagePreferences.map((stage, idx) => (
-                    <Chip key={idx} label={stage} size="small" color="primary" />
-                  ))}
-                </Stack>
+                {displayProspect.stagePreferences && displayProspect.stagePreferences.length > 0 ? (
+                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                    {displayProspect.stagePreferences.map((stage, idx) => (
+                      <Chip key={idx} label={stage} size="small" color="primary" />
+                    ))}
+                  </Box>
+                ) : (
+                  <Typography variant="body2" color="text.secondary">N/A</Typography>
+                )}
+              </Box>
+            </Grid>
+            <Grid size={{ xs: 12 }}>
+              <Box>
+                <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                  Focus Sectors
+                </Typography>
+                {displayProspect.sectors && displayProspect.sectors.length > 0 ? (
+                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                    {displayProspect.sectors.map((sector, idx) => (
+                      <Chip key={idx} label={sector} size="small" color="primary" variant="outlined" />
+                    ))}
+                  </Box>
+                ) : (
+                  <Typography variant="body2" color="text.secondary">N/A</Typography>
+                )}
               </Box>
             </Grid>
           </Grid>
         </Box>
 
-        <Divider sx={{ my: 3 }} />
-
         {/* Portfolio Companies */}
+        <Divider sx={{ my: 3 }} />
         <Box>
           <Typography variant="h6" gutterBottom>
             Portfolio Companies
           </Typography>
           <Paper variant="outlined" sx={{ p: 2, mb: 3 }}>
-            <Stack direction="row" spacing={1} flexWrap="wrap" sx={{ gap: 1 }}>
-              {prospect.portfolio.map((company, idx) => (
-                <Chip 
-                  key={idx} 
-                  icon={<BusinessIcon />}
-                  label={company} 
-                  size="small" 
-                  variant="outlined"
-                />
-              ))}
-            </Stack>
+            {displayProspect.portfolio && displayProspect.portfolio.length > 0 ? (
+              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                {displayProspect.portfolio.map((company, idx) => (
+                  <Chip 
+                    key={idx} 
+                    icon={<BusinessIcon />}
+                    label={company} 
+                    size="small" 
+                    variant="outlined"
+                  />
+                ))}
+              </Box>
+            ) : (
+              <Typography variant="body2" color="text.secondary">N/A</Typography>
+            )}
           </Paper>
         </Box>
 
         <Divider sx={{ my: 3 }} />
 
         {/* Activity Timeline */}
-        <Box>
+        <Box ref={timelineRef}>
           <Typography variant="h6" gutterBottom>
             Activity Timeline
           </Typography>
-          <List dense>
-            <ListItem>
-              <ListItemText
-                primary={`Added to database`}
-                secondary={new Date(prospect.createdAt).toLocaleDateString()}
-              />
-            </ListItem>
-            <ListItem>
-              <ListItemText
-                primary={`Last enriched`}
-                secondary={new Date(prospect.lastEnrichedAt).toLocaleDateString()}
-              />
-            </ListItem>
-            {prospect.lastContactedAt && (
-              <ListItem>
-                <ListItemText
-                  primary={`Last contacted`}
-                  secondary={new Date(prospect.lastContactedAt).toLocaleDateString()}
-                />
-              </ListItem>
-            )}
-            <ListItem>
-              <ListItemText
-                primary={`Current status`}
-                secondaryTypographyProps={{ component: 'div' }}
-                secondary={
-                  <Chip 
-                    label={statusLabels[prospect.status]} 
-                    size="small" 
-                    color="primary"
-                    sx={{ mt: 0.5 }}
+          <Box sx={{ position: 'relative', pl: 3, py: 1 }}>
+            {/* Vertical timeline line */}
+            <Box
+              sx={{
+                position: 'absolute',
+                left: 8,
+                top: 0,
+                bottom: 0,
+                width: 2,
+                bgcolor: 'divider',
+                borderRadius: 1
+              }}
+            />
+            
+            <Stack spacing={2}>
+              {displayProspect.createdAt && (
+                <Box sx={{ position: 'relative' }}>
+                  {/* Timeline dot */}
+                  <Box
+                    sx={{
+                      position: 'absolute',
+                      left: -20,
+                      top: 4,
+                      width: 12,
+                      height: 12,
+                      borderRadius: '50%',
+                      bgcolor: 'primary.main',
+                      border: '2px solid',
+                      borderColor: 'background.paper',
+                      zIndex: 1
+                    }}
                   />
-                }
-              />
-            </ListItem>
-          </List>
+                  <Typography variant="body2" fontWeight="500" gutterBottom>
+                    Added to database
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    {(() => {
+                      try {
+                        const date = new Date(displayProspect.createdAt);
+                        return isNaN(date.getTime()) ? 'N/A' : date.toLocaleDateString('en-US', { 
+                          month: 'short', 
+                          day: 'numeric', 
+                          year: 'numeric' 
+                        });
+                      } catch {
+                        return 'N/A';
+                      }
+                    })()}
+                  </Typography>
+                </Box>
+              )}
+              
+              {displayProspect.lastEnrichedAt && (
+                <Box sx={{ position: 'relative' }}>
+                  {/* Timeline dot */}
+                  <Box
+                    sx={{
+                      position: 'absolute',
+                      left: -20,
+                      top: 4,
+                      width: 12,
+                      height: 12,
+                      borderRadius: '50%',
+                      bgcolor: 'info.main',
+                      border: '2px solid',
+                      borderColor: 'background.paper',
+                      zIndex: 1
+                    }}
+                  />
+                  <Typography variant="body2" fontWeight="500" gutterBottom>
+                    Last enriched
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    {(() => {
+                      try {
+                        const date = new Date(displayProspect.lastEnrichedAt);
+                        return isNaN(date.getTime()) ? 'N/A' : date.toLocaleDateString('en-US', { 
+                          month: 'short', 
+                          day: 'numeric', 
+                          year: 'numeric' 
+                        });
+                      } catch {
+                        return 'N/A';
+                      }
+                    })()}
+                  </Typography>
+                </Box>
+              )}
+              
+              {(displayProspect.lastContactedAt || displayProspect.status === 'contacted') && (
+                <Box sx={{ position: 'relative' }}>
+                  {/* Timeline dot */}
+                  <Box
+                    sx={{
+                      position: 'absolute',
+                      left: -20,
+                      top: 4,
+                      width: 12,
+                      height: 12,
+                      borderRadius: '50%',
+                      bgcolor: 'success.main',
+                      border: '2px solid',
+                      borderColor: 'background.paper',
+                      zIndex: 1
+                    }}
+                  />
+                  <Typography variant="body2" fontWeight="500" gutterBottom>
+                    Last contacted
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    {(() => {
+                      try {
+                        if (displayProspect.lastContactedAt) {
+                          const date = new Date(displayProspect.lastContactedAt);
+                          if (!isNaN(date.getTime())) {
+                            return date.toLocaleDateString('en-US', { 
+                              month: 'short', 
+                              day: 'numeric', 
+                              year: 'numeric' 
+                            });
+                          }
+                        }
+                        // If no lastContactedAt but status is contacted, show "Just now" or current date
+                        return new Date().toLocaleDateString('en-US', { 
+                          month: 'short', 
+                          day: 'numeric', 
+                          year: 'numeric' 
+                        });
+                      } catch {
+                        return 'N/A';
+                      }
+                    })()}
+                  </Typography>
+                </Box>
+              )}
+              
+              {/* Current status - always shown */}
+              <Box sx={{ position: 'relative' }}>
+                {/* Timeline dot */}
+                <Box
+                  sx={{
+                    position: 'absolute',
+                    left: -20,
+                    top: 4,
+                    width: 12,
+                    height: 12,
+                    borderRadius: '50%',
+                    bgcolor: displayProspect.status === 'contacted' ? 'success.main' : 
+                             displayProspect.status === 'interested' ? 'info.main' : 
+                             displayProspect.status === 'not_interested' ? 'error.main' : 'primary.main',
+                    border: '2px solid',
+                    borderColor: 'background.paper',
+                    zIndex: 1
+                  }}
+                />
+                <Typography variant="body2" fontWeight="500" gutterBottom>
+                  Current status
+                </Typography>
+                <Chip 
+                  label={statusLabels[displayProspect.status]} 
+                  size="small" 
+                  color={
+                    displayProspect.status === 'contacted' ? 'success' : 
+                    displayProspect.status === 'interested' ? 'info' : 
+                    displayProspect.status === 'not_interested' ? 'error' : 'primary'
+                  }
+                  sx={{ mt: 0.5 }}
+                />
+              </Box>
+            </Stack>
+          </Box>
         </Box>
 
         {/* Notes Section - Only show if notes exist */}
-        {prospect.notes && (
+        {displayProspect.notes && (
           <>
             <Divider sx={{ my: 3 }} />
             <Box>
@@ -340,7 +1044,7 @@ export default function ProspectDetailModal({ prospect, open, onClose, onStatusU
                 }}
               >
                 <Typography variant="body2" color="text.secondary">
-                  {prospect.notes}
+                  {displayProspect.notes}
                 </Typography>
               </Paper>
             </Box>
@@ -355,17 +1059,59 @@ export default function ProspectDetailModal({ prospect, open, onClose, onStatusU
         >
           Close
         </Button>
-        <Button 
-          variant="contained" 
-          startIcon={<EmailIcon />}
-          onClick={() => {
-            window.location.href = `mailto:${prospect.email}`
-          }}
-          fullWidth={isMobile}
-        >
-          Send Email
-        </Button>
+        {(emailError || linkedInError) && (
+          <Alert severity="error" sx={{ flex: 1 }}>
+            {emailError || linkedInError}
+          </Alert>
+        )}
+        {displayProspect.linkedin && (
+          <Button 
+            variant="contained" 
+            color="primary"
+            startIcon={generatingLinkedIn ? <CircularProgress size={20} /> : <LinkedInIcon />}
+            onClick={handleGenerateLinkedInClick}
+            disabled={generatingLinkedIn}
+            fullWidth={isMobile}
+          >
+            {generatingLinkedIn ? 'Generating Message...' : 'Contact on LinkedIn'}
+          </Button>
+        )}
+        {displayProspect.email && (
+          <Button 
+            variant="contained" 
+            startIcon={generatingEmail ? <CircularProgress size={20} /> : <EmailIcon />}
+            onClick={handleSendEmailClick}
+            disabled={generatingEmail}
+            fullWidth={isMobile}
+          >
+            {generatingEmail ? 'Generating Email...' : 'Send Email'}
+          </Button>
+        )}
       </DialogActions>
+
+      {/* Email Compose Modal */}
+      <EmailComposeModal
+        open={emailModalOpen}
+        onClose={() => {
+          setEmailModalOpen(false)
+          setGeneratedEmail(null)
+        }}
+        prospect={displayProspect}
+        initialEmail={generatedEmail}
+        onSend={handleEmailSend}
+      />
+
+      {/* LinkedIn Message Modal */}
+      <LinkedInMessageModal
+        open={linkedInModalOpen}
+        onClose={() => {
+          setLinkedInModalOpen(false)
+          setGeneratedLinkedInMessage(null)
+        }}
+        prospect={displayProspect}
+        initialMessage={generatedLinkedInMessage}
+        onMessageGenerated={handleLinkedInMessageGenerated}
+      />
     </Dialog>
   )
 }

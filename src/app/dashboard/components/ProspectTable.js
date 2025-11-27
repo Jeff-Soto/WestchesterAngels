@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import {
   Table,
   TableBody,
@@ -32,6 +32,11 @@ export default function ProspectTable({ prospects, onProspectClick, onStatusUpda
   const [orderBy, setOrderBy] = useState('fitScore')
   const [order, setOrder] = useState('desc')
 
+  // Reset to page 0 whenever the prospects list changes (e.g., when filters are applied)
+  useEffect(() => {
+    setPage(0)
+  }, [prospects.length])
+
   const handleSort = (property) => {
     const isAsc = orderBy === property && order === 'asc'
     setOrder(isAsc ? 'desc' : 'asc')
@@ -51,6 +56,11 @@ export default function ProspectTable({ prospects, onProspectClick, onStatusUpda
     if (orderBy === 'sectors') {
       aValue = a.sectors.join(', ')
       bValue = b.sectors.join(', ')
+    }
+
+    if (orderBy === 'investorType') {
+      aValue = formatInvestorType(a.investorType)
+      bValue = formatInvestorType(b.investorType)
     }
 
     if (aValue < bValue) {
@@ -84,6 +94,25 @@ export default function ProspectTable({ prospects, onProspectClick, onStatusUpda
     return 'default'
   }
 
+  const formatInvestorType = (type) => {
+    if (!type) return 'Unknown'
+    const typeLabels = {
+      vc: 'Venture Capitalist',
+      solo_angel: 'Solo Angel',
+      angel_network: 'Angel Network',
+      corporate_vc: 'Corporate VC',
+      family_office: 'Family Office',
+      accelerator: 'Accelerator',
+      pe: 'Private Equity',
+      public_fund: 'Public Fund',
+      revenue_based: 'Revenue-Based',
+      other: 'Other'
+    }
+    return typeLabels[type] || type.split('_').map(word => 
+      word.charAt(0).toUpperCase() + word.slice(1)
+    ).join(' ')
+  }
+
   return (
     <Paper>
       <TableContainer>
@@ -101,11 +130,11 @@ export default function ProspectTable({ prospects, onProspectClick, onStatusUpda
               </TableCell>
               <TableCell>
                 <TableSortLabel
-                  active={orderBy === 'org'}
-                  direction={orderBy === 'org' ? order : 'asc'}
-                  onClick={() => handleSort('org')}
+                  active={orderBy === 'investorType'}
+                  direction={orderBy === 'investorType' ? order : 'asc'}
+                  onClick={() => handleSort('investorType')}
                 >
-                  Organization
+                  Investor Type
                 </TableSortLabel>
               </TableCell>
               <TableCell>
@@ -162,9 +191,14 @@ export default function ProspectTable({ prospects, onProspectClick, onStatusUpda
                     </Typography>
                   </TableCell>
                   <TableCell>
-                    <Typography variant="body2">
-                      {prospect.org}
-                    </Typography>
+                    <Chip
+                      label={formatInvestorType(prospect.investorType)}
+                      size="small"
+                      variant="outlined"
+                      sx={{
+                        fontWeight: 500
+                      }}
+                    />
                   </TableCell>
                   <TableCell>
                     <Stack direction="row" spacing={0.5} alignItems="center">

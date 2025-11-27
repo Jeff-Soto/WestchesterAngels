@@ -544,6 +544,7 @@ export function calculateStats(prospects) {
       byStatus: {},
       bySector: {},
       byState: {},
+      byCity: {},
       scoreDistribution: []
     }
   }
@@ -556,6 +557,7 @@ export function calculateStats(prospects) {
     byStatus: {},
     bySector: {},
     byState: {},
+    byCity: {},
     scoreDistribution: [
       { range: '90-100', count: 0 },
       { range: '80-89', count: 0 },
@@ -577,6 +579,12 @@ export function calculateStats(prospects) {
     // By state
     stats.byState[prospect.location.state] = (stats.byState[prospect.location.state] || 0) + 1
     
+    // By city
+    if (prospect.location.city) {
+      const cityKey = `${prospect.location.city}, ${prospect.location.state}`
+      stats.byCity[cityKey] = (stats.byCity[cityKey] || 0) + 1
+    }
+    
     // Score distribution
     if (prospect.fitScore >= 90) stats.scoreDistribution[0].count++
     else if (prospect.fitScore >= 80) stats.scoreDistribution[1].count++
@@ -592,17 +600,25 @@ export function calculateStats(prospects) {
 export function getFilterOptions(prospects) {
   const allSectors = new Set()
   const allStates = new Set()
+  const allCities = new Set() // Store as "City, State" format
   const allStatuses = new Set()
   
   prospects.forEach(prospect => {
     prospect.sectors.forEach(sector => allSectors.add(sector))
-    allStates.add(prospect.location.state)
+    if (prospect.location.state) {
+      allStates.add(prospect.location.state)
+    }
+    // Add city as "City, State" format for filtering
+    if (prospect.location.city && prospect.location.state) {
+      allCities.add(`${prospect.location.city}, ${prospect.location.state}`)
+    }
     allStatuses.add(prospect.status)
   })
   
   return {
     sectors: Array.from(allSectors).sort(),
     states: Array.from(allStates).sort(),
+    cities: Array.from(allCities).sort(), // Sorted list of "City, State" strings
     statuses: Array.from(allStatuses).sort()
   }
 }

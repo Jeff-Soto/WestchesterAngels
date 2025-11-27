@@ -29,6 +29,7 @@
     "react-dom": "^19.0.0"
   },
   "devDependencies": {
+    "dotenv": "^17.2.3",
     "eslint": "^8.57.1",
     "eslint-config-next": "^15.0.3"
   },

@@ -6,14 +6,18 @@ import {
   Card, 
   CardContent, 
   Button,
-  Chip,
   Stack
 } from '@mui/material'
 import {
   Search as SearchIcon,
   SmartToy as SmartToyIcon,
   FilterList as FilterListIcon,
-  ArrowForward as ArrowForwardIcon
+  Email as EmailIcon,
+  Assessment as AssessmentIcon,
+  Upload as UploadIcon,
+  Timeline as TimelineIcon,
+  ArrowForward as ArrowForwardIcon,
+  AutoAwesome as AutoAwesomeIcon
 } from '@mui/icons-material'
 
 export default function Home() {
@@ -29,65 +33,105 @@ export default function Home() {
             mb: 2
           }}
         >
-          AI Investor Prospecting Engine
+          AI Investor Acquisition Agent
         </Typography>
         
         <Typography 
           variant="h5" 
           color="text.secondary" 
           gutterBottom
-          sx={{ mb: 4 }}
+          sx={{ mb: 6 }}
         >
-          Discover, verify, and prioritize prospective investors using multi-source data and AI
+          Your intelligent AI Agent for enriching, scoring, and engaging high-value prospective investors.
         </Typography>
-
-        <Stack direction="row" spacing={2} justifyContent="center" flexWrap="wrap" gap={1}>
-          <Chip label="Next.js 15" color="primary" />
-          <Chip label="React 19" color="primary" />
-          <Chip label="Material UI" color="primary" variant="outlined" />
-          <Chip label="MongoDB" color="primary" variant="outlined" />
-          <Chip label="OpenAI" color="primary" variant="outlined" />
-        </Stack>
       </Box>
 
-      <Grid container spacing={4} mb={6}>
-        <Grid size={{ xs: 12, md: 4 }}>
+      <Grid container spacing={3} mb={6}>
+        <Grid size={{ xs: 12, sm: 6, md: 4 }}>
           <Card sx={{ height: '100%', transition: 'transform 0.2s', '&:hover': { transform: 'translateY(-4px)' } }}>
             <CardContent sx={{ textAlign: 'center', py: 4 }}>
-              <SearchIcon sx={{ fontSize: 48, color: 'primary.main', mb: 2 }} />
+              <UploadIcon sx={{ fontSize: 48, color: 'primary.main', mb: 2 }} />
               <Typography variant="h5" component="h2" gutterBottom>
-                Multi-Source Collection
+                CSV Intake & Enrichment Agent
               </Typography>
               <Typography color="text.secondary">
-                Public lists, firm pages, and CSV uploads — no expensive APIs
+                Upload investor lists from OpenVC, AngelMatch, spreadsheets, or internal sources. AI automatically
+                normalizes fields, enriches missing info, and standardizes data for high-quality analysis.
               </Typography>
             </CardContent>
           </Card>
         </Grid>
 
-        <Grid size={{ xs: 12, md: 4 }}>
+        <Grid size={{ xs: 12, sm: 6, md: 4 }}>
           <Card sx={{ height: '100%', transition: 'transform 0.2s', '&:hover': { transform: 'translateY(-4px)' } }}>
             <CardContent sx={{ textAlign: 'center', py: 4 }}>
               <SmartToyIcon sx={{ fontSize: 48, color: 'primary.main', mb: 2 }} />
               <Typography variant="h5" component="h2" gutterBottom>
-                AI Verification
+                AI Scoring & Relevance Agent
               </Typography>
               <Typography color="text.secondary">
-                Intelligent data validation, scoring, and human-in-the-loop quality checks
+                Intelligent fit scoring (0–100) based on geography, investor type, stage preferences, sector alignment,
+                and contactability, with reasoning that explains why each investor is a strong match.
               </Typography>
             </CardContent>
           </Card>
         </Grid>
 
-        <Grid size={{ xs: 12, md: 4 }}>
+        <Grid size={{ xs: 12, sm: 6, md: 4 }}>
           <Card sx={{ height: '100%', transition: 'transform 0.2s', '&:hover': { transform: 'translateY(-4px)' } }}>
             <CardContent sx={{ textAlign: 'center', py: 4 }}>
               <FilterListIcon sx={{ fontSize: 48, color: 'primary.main', mb: 2 }} />
               <Typography variant="h5" component="h2" gutterBottom>
-                Smart Filtering
+                AI Search & Filtering Agent
               </Typography>
               <Typography color="text.secondary">
-                Real-time filtering by sector, geography, verification status, and fit score
+                Filter by status, sector, location, fit score, and more. Use semantic search to ask natural-language
+                queries like “NYC fintech investors with recent activity.”
+              </Typography>
+            </CardContent>
+          </Card>
+        </Grid>
+
+        <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+          <Card sx={{ height: '100%', transition: 'transform 0.2s', '&:hover': { transform: 'translateY(-4px)' } }}>
+            <CardContent sx={{ textAlign: 'center', py: 4 }}>
+              <EmailIcon sx={{ fontSize: 48, color: 'primary.main', mb: 2 }} />
+              <Typography variant="h5" component="h2" gutterBottom>
+                AI Outreach Agent
+              </Typography>
+              <Typography color="text.secondary">
+                Generate personalized email and LinkedIn outreach tailored to each investor’s background, portfolio,
+                and focus areas—saving hours of manual research and drafting.
+              </Typography>
+            </CardContent>
+          </Card>
+        </Grid>
+
+        <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+          <Card sx={{ height: '100%', transition: 'transform 0.2s', '&:hover': { transform: 'translateY(-4px)' } }}>
+            <CardContent sx={{ textAlign: 'center', py: 4 }}>
+              <AssessmentIcon sx={{ fontSize: 48, color: 'primary.main', mb: 2 }} />
+              <Typography variant="h5" component="h2" gutterBottom>
+                AI Portfolio Insights Agent
+              </Typography>
+              <Typography color="text.secondary">
+                Analyze past investments to spot patterns in sectors, geographies, and deal profiles, helping refine
+                your investor acquisition and dealflow strategy.
+              </Typography>
+            </CardContent>
+          </Card>
+        </Grid>
+
+        <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+          <Card sx={{ height: '100%', transition: 'transform 0.2s', '&:hover': { transform: 'translateY(-4px)' } }}>
+            <CardContent sx={{ textAlign: 'center', py: 4 }}>
+              <TimelineIcon sx={{ fontSize: 48, color: 'primary.main', mb: 2 }} />
+              <Typography variant="h5" component="h2" gutterBottom>
+                Activity & Pipeline Tracking Agent
+              </Typography>
+              <Typography color="text.secondary">
+                Track prospect status, outreach history, replies, and conversions with a visual timeline from “New”
+                to “Contacted” to “Interested.”
               </Typography>
             </CardContent>
           </Card>
@@ -106,7 +150,15 @@ export default function Home() {
             endIcon={<ArrowForwardIcon />}
             href="/dashboard"
           >
-            View Live Demo
+            View Dashboard
+          </Button>
+          <Button 
+            variant="outlined" 
+            size="large"
+            startIcon={<AutoAwesomeIcon />}
+            href="/ai-solutions"
+          >
+            AI Solutions
           </Button>
           <Button 
             variant="outlined" 
@@ -117,20 +169,9 @@ export default function Home() {
           </Button>
         </Stack>
         <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
-          ✨ Demo POC with 30 real NYC/tri-state investors • Full filtering & search • Interactive UI
+          ✨ Manage your investor pipeline • AI-powered insights • Advanced filtering & search
         </Typography>
       </Box>
-
-      <Card sx={{ bgcolor: 'background.default', textAlign: 'center' }}>
-        <CardContent sx={{ py: 4 }}>
-          <Typography variant="h6" gutterBottom>
-            Development Environment
-          </Typography>
-          <Typography color="text.secondary" sx={{ fontFamily: 'monospace', fontSize: '0.9rem' }}>
-            Next.js 15.5 • React 19 • Material UI • MongoDB • OpenAI
-          </Typography>
-        </CardContent>
-      </Card>
     </Container>
   )
 }
